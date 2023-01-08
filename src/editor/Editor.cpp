@@ -16,6 +16,9 @@ void Editor::renderGui()
 {
   ImGui::NewFrame();
 
+  //////////////
+  //  SIDEBAR
+  ///////////////////
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
   int sideBarWidth = imgWidth * 2 + (tileSize / 2);
   ImGui::SetNextWindowSize(ImVec2(sideBarWidth, Editor::windowHeight - 20), 0);
@@ -69,12 +72,17 @@ void Editor::renderGui()
 
   ImGui::End();
 
+  ///////////////////////
+  //  MAIN MENU BAR
+  /////////////////////
+  bool openMapModal = false;
   if (ImGui::BeginMainMenuBar())
   {
     if (ImGui::BeginMenu("File"))
     {
       if (ImGui::MenuItem("Open Map"))
       {
+        openMapModal = true;
       }
       if (ImGui::MenuItem("Save Map"))
       {
@@ -83,6 +91,39 @@ void Editor::renderGui()
     }
 
     ImGui::EndMainMenuBar();
+  }
+
+  ///////////////
+  //  OPEN FILE DIALOG
+  //////////////
+
+  if (openMapModal)
+  {
+    ImGui::OpenPopup("Open Map File");
+  }
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+  if (ImGui::BeginPopupModal("Open Map File", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+    ImGui::Text("Type in the map file's location below\nThen hit the button marked 'open' to start editing");
+    ImGui::Separator();
+
+    static char buf[256];
+    ImGui::InputText("Filepath", buf, IM_ARRAYSIZE(buf));
+
+    ImGui::Separator();
+    if (ImGui::Button("Open", ImVec2(120, 0)))
+    {
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SetItemDefaultFocus();
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(120, 0)))
+    {
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::EndPopup();
   }
 
   ImGui::ShowDemoWindow();
@@ -97,6 +138,7 @@ Editor::Editor()
   running = false;
   assetStore = std::make_unique<AssetStore>();
   eventBus = std::make_unique<EventBus>();
+  canvas = std::make_unique<Canvas>(0, 0, 0);
 }
 
 Editor::~Editor()
@@ -120,15 +162,15 @@ void Editor::initialize()
   SDL_DisplayMode dm;
   SDL_GetCurrentDisplayMode(0, &dm);
 
-  this->windowWidth = dm.w - 10;
-  this->windowHeight = dm.h - 10;
+  this->windowWidth = dm.w;
+  this->windowHeight = dm.h;
   this->window = SDL_CreateWindow(
       "Tile map editor",
       SDL_WINDOWPOS_CENTERED,
       SDL_WINDOWPOS_CENTERED,
       windowWidth,
       windowHeight,
-      0);
+      SDL_WINDOW_MAXIMIZED);
 
   if (!window)
   {
@@ -152,16 +194,17 @@ void Editor::setup()
 {
   assetStore->addTexture(renderer, "image", "./assets/f22.png");
   assetStore->addTexture(renderer, "tilemap", "./assets/tiles_packed.png");
+  ImGuiIO &io = ImGui::GetIO();
+  io.KeyMap[ImGuiKey_Backspace] = SDL_SCANCODE_BACKSPACE;
+  io.KeyMap[ImGuiKey_Space] = SDL_SCANCODE_SPACE;
+  io.KeyMap[ImGuiKey_Tab] = SDL_SCANCODE_TAB;
+  io.KeyMap[ImGuiKey_Enter] = SDL_SCANCODE_RETURN;
+  io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
+  io.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP;
+  io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+  io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
 
-  selectedTileset = assetStore->getTexture("tilemap");
-  mapWidth = 32;
-  mapHeight = 32;
-  tileRow = 0;
-  tileCol = 0;
-  tileSize = 16;
-  imgWidth = 12 * 16;
-  imgHeight = 10 * 16;
-  zoom = 1;
+  loadMap("");
 }
 
 void Editor::run()
@@ -190,55 +233,47 @@ void Editor::processInput()
     io.MousePos = ImVec2(mouseX, mouseY);
     io.MouseDown[0] = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
     io.MouseDown[1] = buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
-    io.KeyShift = ((SDL_GetModState() & KMOD_SHIFT) != 0);
-    io.KeyCtrl = ((SDL_GetModState() & KMOD_CTRL) != 0);
-    io.KeyAlt = ((SDL_GetModState() & KMOD_ALT) != 0);
-    io.KeySuper = ((SDL_GetModState() & KMOD_GUI) != 0);
 
     // core SDL events
     switch (sdlEvent.type)
     {
 
-      // case SDL_WINDOWEVENT:
-      //   switch (sdlEvent.window.event)
-      //   {
-      //   case SDL_WINDOWEVENT_RESIZED:
-      //     int w, h;
-      //     SDL_GetWindowSize(window, &w, &h);
-      //     Editor::windowHeight = h;
-      //     Editor::windowWidth = w;
-      //     break;
-      //   }
-      //   break;
+    case SDL_WINDOWEVENT:
+      switch (sdlEvent.window.event)
+      {
+      case SDL_WINDOWEVENT_RESIZED:
+        int w, h;
+        SDL_GetWindowSize(window, &w, &h);
+        Editor::windowHeight = h;
+        Editor::windowWidth = w;
+        break;
+      }
+      break;
 
     case SDL_QUIT:
       running = false;
       break;
 
-      // case SDL_KEYDOWN:
-      //   eventBus->emit<KeyPressEvent>(sdlEvent.key.keysym.sym);
-      //   switch (sdlEvent.key.keysym.sym)
-      //   {
-      //   case SDLK_ESCAPE:
-      //     running = false;
-      //     break;
+    case SDL_KEYDOWN:
+      eventBus->emit<KeyPressEvent>(sdlEvent.key.keysym.sym);
+      switch (sdlEvent.key.keysym.sym)
+      {
+      case SDLK_ESCAPE:
+        running = false;
+        break;
+      }
+      break;
 
-      //   case SDLK_BACKSPACE:
-      //     io.KeysDown[42] = true;
-      //     break;
-      //   }
-      //   break;
-
-      // case SDL_MOUSEWHEEL:
-      //   if (sdlEvent.wheel.y > 0)
-      //   {
-      //     zoom *= 1.075;
-      //   }
-      //   if (sdlEvent.wheel.y < 0)
-      //   {
-      //     zoom *= 0.925;
-      //   }
-      //   break;
+    case SDL_MOUSEWHEEL:
+      if (sdlEvent.wheel.y > 0)
+      {
+        zoom *= 1.075;
+      }
+      if (sdlEvent.wheel.y < 0)
+      {
+        zoom *= 0.925;
+      }
+      break;
     }
   }
 }
@@ -251,8 +286,9 @@ void Editor::update()
   {
     SDL_Delay(timeToWait);
   }
-
   double deltaTime = (ticks - millisPreviousFrame) / 1000.0f;
+  ImGuiIO &io = ImGui::GetIO();
+  io.DeltaTime = deltaTime;
   this->millisPreviousFrame = ticks;
 }
 
@@ -262,53 +298,51 @@ void Editor::render()
   SDL_RenderClear(renderer);
 
   // Render phase
+  // Background
   SDL_Rect rect = {0, 0, windowWidth, windowHeight};
   SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
   SDL_RenderFillRect(renderer, &rect);
 
-  // Render the map
-  int originX = 50;
-  int originY = 50;
-  int margin = 2;
-  int tileSize = 16;
-  double scale = 2 * zoom;
-  auto texture = assetStore->getTexture("tilemap");
-  for (int y = 0; y < mapHeight; y++)
-  {
-    int yPos = originY + (y * tileSize * scale) + margin;
-    int ysrcRect = y * tileSize;
-    for (int x = 0; x < mapWidth; x++)
-    {
-      int xPos = originX + (x * tileSize * scale) + margin;
-      int xSrcRect = x * tileSize;
-      // SDL_Rect srcRect = {ysrcRect, xSrcRect, tileSize, tileSize};
-      SDL_Rect checkerRect = {xPos, yPos, tileSize * scale, tileSize * scale};
-      if ((x + y) % 2 == 0)
-      {
-        SDL_SetRenderDrawColor(renderer, 44, 44, 44, 255);
-      }
-      else
-      {
-        SDL_SetRenderDrawColor(renderer, 77, 77, 77, 255);
-      }
-      SDL_RenderFillRect(renderer, &checkerRect);
-      // SDL_RenderCopy(renderer, texture, &srcRect, &dstrect);
-    }
-  }
+  // Canvas
+  canvas->draw(renderer, zoom);
 
   // Render selected tile at the mouse
-
-  int yPos = mouseY - ((tileSize * scale) / 2);
+  int yPos = mouseY - ((tileSize * zoom) / 2);
   int ysrcRect = tileCol * tileSize;
-  int xPos = mouseX - ((tileSize * scale) / 2);
+  int xPos = mouseX - ((tileSize * zoom) / 2);
   int xSrcRect = tileRow * tileSize;
   SDL_Rect srcRect = {ysrcRect, xSrcRect, tileSize, tileSize};
-  SDL_Rect dstrect = {xPos, yPos, tileSize * scale, tileSize * scale};
+  SDL_Rect dstrect = {xPos, yPos, tileSize * zoom, tileSize * zoom};
   SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
 
+  // GUI
   renderGui();
 
   SDL_RenderPresent(renderer);
+}
+
+void Editor::loadMap(std::string filePath)
+{
+  // Parse map file
+
+  // Set values from file
+  selectedTileset = assetStore->getTexture("tilemap");
+  mapWidth = 32;
+  mapHeight = 32;
+  tileRow = 0;
+  tileCol = 0;
+  tileSize = 16;
+  imgWidth = 12 * 16;
+  imgHeight = 10 * 16;
+  zoom = 1;
+
+  // Set Canvas up
+  canvas->setTileSize(tileSize);
+  canvas->setWidth(mapWidth * tileSize);
+  canvas->setHeight(mapHeight * tileSize);
+  canvas->setPosition(30, 30);
+
+  // Set Tilemap up
 }
 
 void Editor::destroy()

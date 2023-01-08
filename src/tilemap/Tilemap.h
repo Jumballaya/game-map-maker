@@ -2,6 +2,7 @@
 #define TILEMAP_H
 
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 
 struct Tile
@@ -27,6 +28,35 @@ public:
   }
 };
 
+// class TileMapLayer
+// {
+// public:
+//   TileMapLayer(int mapWidth, int mapHeight, int tileSize);
+//   ~TileMapLayer();
+
+//   // void draw(SDL_Renderer* renderer, SDL_Texture* texture, int originX, int originY, double zoom);
+//   void draw()
+//   {
+//     // Render the map
+//     // for (int y = 0; y < mapHeight; y++)
+//     // {
+//     //   int yPos = originY + (y * tileSize * zoom);
+//     //   int ysrcRect = y * tileSize;
+//     //   for (int x = 0; x < mapWidth; x++)
+//     //   {
+//     //     int xPos = originX + (x * tileSize * zoom);
+//     //     int xSrcRect = x * tileSize;
+//     //     SDL_Rect srcRect = {ysrcRect, xSrcRect, tileSize, tileSize};
+//     //     SDL_Rect dstRect = {xPos, yPos, tileSize * zoom, tileSize * zoom};
+//     //     SDL_RenderCopy(renderer, texture, &srcRect, &dstRect);
+//     //   }
+//     // }
+//   }
+
+// private:
+//   std::vector<std::vector<Tile *>> tiles;
+// };
+
 class TileMap
 {
 public:
@@ -40,8 +70,13 @@ public:
   Tile getTile(int row, int col) const;
   void updateTile(int row, int col, int srcRow, int srcCol);
 
+  // Tile getTile(int layer, int row, int col) const;
+  // void updateTile(int layer, int row, int col, int srcRow, int srcCol);
+
 private:
   std::vector<std::vector<Tile *>> tiles;
+
+  // std::unordered_map<int, TileMapLayer> layers;
 };
 
 #endif
