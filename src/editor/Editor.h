@@ -1,13 +1,16 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef EDITOR_H
+#define EDITOR_H
 
 #include <memory>
 #include <string>
 #include <SDL2/SDL.h>
+#include "../gui/GUI.h"
 
 #include "../eventbus/EventBus.h"
+#include "../events/Events.h"
 #include "../assetstore/AssetStore.h"
 #include "Canvas.h"
+#include "../mouse/Mouse.h"
 #include "../tilemap/Tilemap.h"
 
 const int FPS = 30;
@@ -29,10 +32,12 @@ public:
   void processInput();
   void update();
   void render();
-  void renderGui();
 
   //
   void loadMap(std::string filePath);
+
+  // Events
+  void onTileSelect(TileSelectEvent &event);
 
   // Editor
   static int windowWidth;
@@ -56,16 +61,6 @@ private:
   // Need a draw method
   // Draws background, then mapdata
   // Multiple layers
-  std::unique_ptr<Canvas> canvas;
-
-  // Camera struct
-  // Controls zoom
-  // Controls scrolling offset
-  // Holds camera state
-
-  // Mouse struct
-  // Holds mouse data
-  // x, y, zoom
 
   int tileRow;
   int tileCol;
@@ -76,13 +71,11 @@ private:
   int imgWidth;
   int imgHeight;
 
-  int mouseX;
-  int mouseY;
-
-  double zoom;
-
   std::unique_ptr<AssetStore> assetStore;
   std::unique_ptr<EventBus> eventBus;
+  std::unique_ptr<Mouse> mouse;
+  std::unique_ptr<Canvas> canvas;
+  std::unique_ptr<EditorGUI> gui;
 
   int millisPreviousFrame = 0;
 

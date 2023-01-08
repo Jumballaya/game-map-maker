@@ -39,14 +39,22 @@ public:
     posY = y;
   }
 
+  void offset(int x, int y)
+  {
+    posX += x;
+    posY += y;
+  }
+
   void draw(SDL_Renderer *renderer, double zoom)
   {
+    int yStart = posY - ((height * zoom) / 2);
+    int xStart = posX - ((width * zoom) / 2);
     for (int y = 0; y < height / tileSize; y++)
     {
-      int yPos = posY + (y * tileSize * zoom);
+      int yPos = yStart + (y * tileSize * zoom);
       for (int x = 0; x < width / tileSize; x++)
       {
-        int xPos = posX + (x * tileSize * zoom);
+        int xPos = xStart + (x * tileSize * zoom);
         SDL_Rect checkerRect = {xPos, yPos, tileSize * zoom, tileSize * zoom};
         if ((x + y) % 2 == 0)
         {

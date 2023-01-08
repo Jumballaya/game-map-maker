@@ -12,126 +12,6 @@
 int Editor::windowWidth;
 int Editor::windowHeight;
 
-void Editor::renderGui()
-{
-  ImGui::NewFrame();
-
-  //////////////
-  //  SIDEBAR
-  ///////////////////
-  ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
-  int sideBarWidth = imgWidth * 2 + (tileSize / 2);
-  ImGui::SetNextWindowSize(ImVec2(sideBarWidth, Editor::windowHeight - 20), 0);
-  ImGui::SetNextWindowPos(ImVec2(Editor::windowWidth - sideBarWidth, 20));
-  ImGui::Begin("Tiles and Textures", NULL, windowFlags);
-  ImGui::Text("Tile Selection", 22);
-  ImGui::Separator();
-  ImGui::BeginChild("tiles", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
-
-  auto scrollY = ImGui::GetScrollY();
-  auto scrollX = ImGui::GetScrollX();
-
-  int imageWidth = imgWidth * 2;
-  int imageHeight = imgHeight * 2;
-
-  ImGui::Image(selectedTileset, ImVec2(imageWidth, imageHeight));
-
-  int mousePosX = static_cast<int>(ImGui::GetMousePos().x - ImGui::GetWindowPos().x + scrollX);
-  int mousePosY = static_cast<int>(ImGui::GetMousePos().y - ImGui::GetWindowPos().y + scrollY);
-
-  mouseX = ImGui::GetMousePos().x;
-  mouseY = ImGui::GetMousePos().y;
-
-  int rows = imageHeight / (tileSize * 2);
-  int cols = imageWidth / (tileSize * 2);
-
-  for (int i = 0; i < cols; i++)
-  {
-    for (int j = 0; j < rows; j++)
-    {
-      // auto drawList = ImGui::GetWindowDrawList();
-
-      // Check to see if we are in the area of the desired 2D tile
-      if ((mousePosX >= (imageWidth / cols) * i && mousePosX <= (imageWidth / cols) + ((imageWidth / cols) * i)) && (mousePosY >= (imageHeight / rows) * j && mousePosY <= (imageHeight / rows) + ((imageHeight / rows) * j)))
-      {
-        if (ImGui::IsItemHovered())
-        {
-
-          if (ImGui::IsMouseClicked(0))
-          {
-
-            tileCol = i;
-            tileRow = j;
-          }
-        }
-      }
-    }
-  }
-
-  ImGui::EndChild();
-
-  ImGui::End();
-
-  ///////////////////////
-  //  MAIN MENU BAR
-  /////////////////////
-  bool openMapModal = false;
-  if (ImGui::BeginMainMenuBar())
-  {
-    if (ImGui::BeginMenu("File"))
-    {
-      if (ImGui::MenuItem("Open Map"))
-      {
-        openMapModal = true;
-      }
-      if (ImGui::MenuItem("Save Map"))
-      {
-      }
-      ImGui::EndMenu();
-    }
-
-    ImGui::EndMainMenuBar();
-  }
-
-  ///////////////
-  //  OPEN FILE DIALOG
-  //////////////
-
-  if (openMapModal)
-  {
-    ImGui::OpenPopup("Open Map File");
-  }
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-  if (ImGui::BeginPopupModal("Open Map File", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-  {
-    ImGui::Text("Type in the map file's location below\nThen hit the button marked 'open' to start editing");
-    ImGui::Separator();
-
-    static char buf[256];
-    ImGui::InputText("Filepath", buf, IM_ARRAYSIZE(buf));
-
-    ImGui::Separator();
-    if (ImGui::Button("Open", ImVec2(120, 0)))
-    {
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::SetItemDefaultFocus();
-    ImGui::SameLine();
-    if (ImGui::Button("Cancel", ImVec2(120, 0)))
-    {
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::EndPopup();
-  }
-
-  ImGui::ShowDemoWindow();
-
-  ImGui::Render();
-  ImGuiSDL::Render(ImGui::GetDrawData());
-}
-
 Editor::Editor()
 {
   Logger::Log("[Editor] constructor called");
@@ -139,6 +19,8 @@ Editor::Editor()
   assetStore = std::make_unique<AssetStore>();
   eventBus = std::make_unique<EventBus>();
   canvas = std::make_unique<Canvas>(0, 0, 0);
+  mouse = std::make_unique<Mouse>(0, 0);
+  gui = std::make_unique<EditorGUI>();
 }
 
 Editor::~Editor()
@@ -204,7 +86,15 @@ void Editor::setup()
   io.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
   io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
 
-  loadMap("");
+  eventBus->subscribe<TileSelectEvent>(this, &Editor::onTileSelect);
+
+  loadMap("__init__");
+
+  // Setup mouse
+  int mouseX, mouseY;
+  const int buttons = SDL_GetMouseState(&mouseX, &mouseY);
+  mouse->move(mouseX, mouseY);
+  mouse->move(mouseX, mouseY);
 }
 
 void Editor::run()
@@ -229,10 +119,44 @@ void Editor::processInput()
 
     int mouseX, mouseY;
     const int buttons = SDL_GetMouseState(&mouseX, &mouseY);
-
     io.MousePos = ImVec2(mouseX, mouseY);
     io.MouseDown[0] = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
     io.MouseDown[1] = buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
+    mouse->move(mouseX, mouseY);
+
+    if (mouse->isDragging())
+    {
+      auto offset = mouse->getDragOffset();
+      std::cout << "Drag Offset: " << offset.x << ", " << offset.y << std::endl;
+      auto pos = mouse->getPosition();
+      std::cout << "Mouse Pos: " << pos.x << ", " << pos.y << std::endl;
+      canvas->offset(offset.x, offset.y);
+    }
+
+    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+    {
+      mouse->click(1);
+    }
+    else
+    {
+      mouse->stopClick(1);
+    }
+    if (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT))
+    {
+      mouse->click(2);
+    }
+    else
+    {
+      mouse->stopClick(2);
+    }
+    if (buttons & SDL_BUTTON(SDL_BUTTON_MIDDLE))
+    {
+      mouse->click(3);
+    }
+    else
+    {
+      mouse->stopClick(3);
+    }
 
     // core SDL events
     switch (sdlEvent.type)
@@ -267,11 +191,11 @@ void Editor::processInput()
     case SDL_MOUSEWHEEL:
       if (sdlEvent.wheel.y > 0)
       {
-        zoom *= 1.075;
+        mouse->zoomPlus();
       }
       if (sdlEvent.wheel.y < 0)
       {
-        zoom *= 0.925;
+        mouse->zoomMinus();
       }
       break;
     }
@@ -289,11 +213,15 @@ void Editor::update()
   double deltaTime = (ticks - millisPreviousFrame) / 1000.0f;
   ImGuiIO &io = ImGui::GetIO();
   io.DeltaTime = deltaTime;
+
   this->millisPreviousFrame = ticks;
 }
 
 void Editor::render()
 {
+  glm::vec2 mouseCoords = mouse->getPosition();
+  double mouseZoom = mouse->getZoom();
+
   SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
   SDL_RenderClear(renderer);
 
@@ -304,19 +232,19 @@ void Editor::render()
   SDL_RenderFillRect(renderer, &rect);
 
   // Canvas
-  canvas->draw(renderer, zoom);
+  canvas->draw(renderer, mouseZoom);
 
   // Render selected tile at the mouse
-  int yPos = mouseY - ((tileSize * zoom) / 2);
+  int yPos = mouseCoords.y - ((tileSize * mouseZoom) / 2);
   int ysrcRect = tileCol * tileSize;
-  int xPos = mouseX - ((tileSize * zoom) / 2);
+  int xPos = mouseCoords.x - ((tileSize * mouseZoom) / 2);
   int xSrcRect = tileRow * tileSize;
   SDL_Rect srcRect = {ysrcRect, xSrcRect, tileSize, tileSize};
-  SDL_Rect dstrect = {xPos, yPos, tileSize * zoom, tileSize * zoom};
+  SDL_Rect dstrect = {xPos, yPos, tileSize * mouseZoom, tileSize * mouseZoom};
   SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
 
   // GUI
-  renderGui();
+  gui->render(imgWidth, imgHeight, tileSize, tileCol, tileRow, mouse, eventBus, selectedTileset);
 
   SDL_RenderPresent(renderer);
 }
@@ -334,13 +262,12 @@ void Editor::loadMap(std::string filePath)
   tileSize = 16;
   imgWidth = 12 * 16;
   imgHeight = 10 * 16;
-  zoom = 1;
 
   // Set Canvas up
   canvas->setTileSize(tileSize);
   canvas->setWidth(mapWidth * tileSize);
   canvas->setHeight(mapHeight * tileSize);
-  canvas->setPosition(30, 30);
+  canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
   // Set Tilemap up
 }
@@ -353,3 +280,9 @@ void Editor::destroy()
   SDL_DestroyWindow(window);
   SDL_Quit();
 }
+
+void Editor::onTileSelect(TileSelectEvent &event)
+{
+  tileCol = event.col;
+  tileRow = event.row;
+};

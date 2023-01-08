@@ -2,6 +2,7 @@
 #define KEYPRESSEVENT_H
 
 #include <SDL2/SDL.h>
+#include "../eventbus/Event.h"
 
 class KeyPressEvent : public Event
 {
