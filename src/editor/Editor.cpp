@@ -98,7 +98,7 @@ void Editor::setup()
 
   // Setup mouse
   int mouseX, mouseY;
-  const int buttons = SDL_GetMouseState(&mouseX, &mouseY);
+  SDL_GetMouseState(&mouseX, &mouseY);
   mouse->move(mouseX, mouseY);
   mouse->move(mouseX, mouseY);
 
@@ -216,11 +216,10 @@ void Editor::update()
   if (mouse->isDragging())
   {
     auto offset = mouse->getDragOffset();
-    auto pos = mouse->getPosition();
     canvas->offset(offset.x, offset.y);
   }
   int mouseX, mouseY;
-  const int buttons = SDL_GetMouseState(&mouseX, &mouseY);
+  SDL_GetMouseState(&mouseX, &mouseY);
   mouse->move(mouseX, mouseY);
 
   if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect(mouse->getZoom())))
@@ -267,7 +266,7 @@ void Editor::render()
     int yPos = (canvas->getYPosition() - ((canvas->getHeight() * mouseZoom) / 2)) + (coords.y * tileSize * mouseZoom);
     int ySrcRect = selectedTileData.y * tileSize;
     SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
-    SDL_Rect dstrect = {xPos, yPos, tileSize * mouseZoom, tileSize * mouseZoom};
+    SDL_Rect dstrect = {xPos, yPos, static_cast<int>(tileSize * mouseZoom), static_cast<int>(tileSize * mouseZoom)};
     SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
   }
 

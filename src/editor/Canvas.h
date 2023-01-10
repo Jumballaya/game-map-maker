@@ -39,7 +39,6 @@ public:
       return glm::vec2(-1, -1);
     }
 
-    int tileWidth = width / tileSize;
     int x = static_cast<int>(std::floor((offset.x / tileSize)));
     int y = static_cast<int>(std::floor((offset.y / tileSize)));
     return glm::vec2(x, y);
@@ -79,13 +78,14 @@ public:
   {
     int yStart = static_cast<int>(posY - ((height * zoom) / 2));
     int xStart = static_cast<int>(posX - ((width * zoom) / 2));
+    int tileZoom = static_cast<int>(tileSize * zoom);
     for (int y = 0; y < height / tileSize; y++)
     {
-      int yPos = yStart + (y * tileSize * zoom);
+      int yPos = yStart + (y * tileZoom);
       for (int x = 0; x < width / tileSize; x++)
       {
-        int xPos = xStart + (x * tileSize * zoom);
-        SDL_Rect checkerRect = {xPos, yPos, tileSize * zoom, tileSize * zoom};
+        int xPos = xStart + (x * tileZoom);
+        SDL_Rect checkerRect = {xPos, yPos, tileZoom, tileZoom};
         if ((x + y) % 2 == 0)
         {
           SDL_SetRenderDrawColor(renderer, darkColor.r, darkColor.g, darkColor.b, 255);

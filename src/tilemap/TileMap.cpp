@@ -32,7 +32,7 @@ Tile TileMap::getTile(glm::vec2 position) const
   int col = position.x;
   int row = position.y;
 
-  if (row < tiles.size() && col < tiles[row].size())
+  if (row < static_cast<int>(tiles.size()) && col < static_cast<int>(tiles[row].size()))
   {
     return *tiles[row][col];
   }
@@ -47,7 +47,7 @@ void TileMap::updateTile(glm::vec2 position, glm::vec2 tileData)
   int srcCol = tileData.x;
   int srcRow = tileData.y;
 
-  if (row < tiles.size() && col < tiles[row].size())
+  if (row < static_cast<int>(tiles.size()) && col < static_cast<int>(tiles[row].size()))
   {
     tiles[row][col]->srcCol = srcCol;
     tiles[row][col]->srcRow = srcRow;
@@ -91,7 +91,7 @@ void TileMap::draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 posit
       int xPos = static_cast<int>(xStart + (x * tileSize * zoom));
       int xSrcRect = col->srcCol * tileSize;
       SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
-      SDL_Rect dstRect = {xPos, yPos, tileSize * zoom, tileSize * zoom};
+      SDL_Rect dstRect = {xPos, yPos, static_cast<int>(tileSize * zoom), static_cast<int>(tileSize * zoom)};
       SDL_RenderCopy(renderer, texture, &srcRect, &dstRect);
 
       x++;
