@@ -18,6 +18,7 @@ Editor::Editor()
   running = false;
   assetStore = std::make_unique<AssetStore>();
   eventBus = std::make_unique<EventBus>();
+  tileMap = std::make_unique<TileMap>(0, 0, 0);
   canvas = std::make_unique<Canvas>(0, 0, 0);
   mouse = std::make_unique<Mouse>(0, 0);
   gui = std::make_unique<EditorGUI>();
@@ -87,6 +88,7 @@ void Editor::setup()
   io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
 
   eventBus->subscribe<TileSelectEvent>(this, &Editor::onTileSelect);
+  eventBus->subscribe<RunLUAEvent>(this, &Editor::onRunLua);
 
   loadMap("__init__");
 
@@ -95,6 +97,9 @@ void Editor::setup()
   const int buttons = SDL_GetMouseState(&mouseX, &mouseY);
   mouse->move(mouseX, mouseY);
   mouse->move(mouseX, mouseY);
+
+  // Setup LUA
+  lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::os);
 }
 
 void Editor::run()
@@ -122,17 +127,6 @@ void Editor::processInput()
     io.MousePos = ImVec2(mouseX, mouseY);
     io.MouseDown[0] = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
     io.MouseDown[1] = buttons & SDL_BUTTON(SDL_BUTTON_RIGHT);
-    mouse->move(mouseX, mouseY);
-
-    if (mouse->isDragging())
-    {
-      auto offset = mouse->getDragOffset();
-      std::cout << "Drag Offset: " << offset.x << ", " << offset.y << std::endl;
-      auto pos = mouse->getPosition();
-      std::cout << "Mouse Pos: " << pos.x << ", " << pos.y << std::endl;
-      canvas->offset(offset.x, offset.y);
-    }
-
     if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
     {
       mouse->click(1);
@@ -214,6 +208,33 @@ void Editor::update()
   ImGuiIO &io = ImGui::GetIO();
   io.DeltaTime = deltaTime;
 
+  // Update Mouse Stuff
+  if (mouse->isDragging())
+  {
+    auto offset = mouse->getDragOffset();
+    auto pos = mouse->getPosition();
+    canvas->offset(offset.x, offset.y);
+  }
+  int mouseX, mouseY;
+  const int buttons = SDL_GetMouseState(&mouseX, &mouseY);
+  mouse->move(mouseX, mouseY);
+
+  if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect(mouse->getZoom())))
+  {
+    // 1. Get tile location from canvas
+    glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition(), mouse->getZoom());
+    Logger::Log("Place at: (" + std::to_string(tileCoords.x) + ", " + std::to_string(tileCoords.y) + ")");
+
+    // 2. Insert the currently selected tile (col/row) into the tilemap
+    if (tileCoords.x >= 0 && tileCoords.y >= 0)
+    {
+      tileMap->updateTile(tileCoords, glm::vec2(tileCol, tileRow));
+      Logger::Log("Place the dang tile!");
+    }
+  }
+
+  // End Mouse Stuff
+
   this->millisPreviousFrame = ticks;
 }
 
@@ -233,15 +254,19 @@ void Editor::render()
 
   // Canvas
   canvas->draw(renderer, mouseZoom);
+  tileMap->draw(renderer, selectedTileset, glm::vec2(canvas->getXPosition(), canvas->getYPosition()), mouseZoom);
 
-  // Render selected tile at the mouse
-  int yPos = mouseCoords.y - ((tileSize * mouseZoom) / 2);
-  int ysrcRect = tileCol * tileSize;
-  int xPos = mouseCoords.x - ((tileSize * mouseZoom) / 2);
-  int xSrcRect = tileRow * tileSize;
-  SDL_Rect srcRect = {ysrcRect, xSrcRect, tileSize, tileSize};
-  SDL_Rect dstrect = {xPos, yPos, tileSize * mouseZoom, tileSize * mouseZoom};
-  SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
+  if (mouse->isHovering(canvas->getRect(mouseZoom)))
+  {
+    // Render selected tile at the mouse
+    int yPos = mouseCoords.y - ((tileSize * mouseZoom) / 2);
+    int ysrcRect = tileCol * tileSize;
+    int xPos = mouseCoords.x - ((tileSize * mouseZoom) / 2);
+    int xSrcRect = tileRow * tileSize;
+    SDL_Rect srcRect = {ysrcRect, xSrcRect, tileSize, tileSize};
+    SDL_Rect dstrect = {xPos, yPos, tileSize * mouseZoom, tileSize * mouseZoom};
+    SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
+  }
 
   // GUI
   gui->render(imgWidth, imgHeight, tileSize, tileCol, tileRow, mouse, eventBus, selectedTileset);
@@ -270,6 +295,8 @@ void Editor::loadMap(std::string filePath)
   canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
   // Set Tilemap up
+  tileMap->clear();
+  tileMap->initialize(mapHeight, mapWidth, tileSize);
 }
 
 void Editor::destroy()
@@ -286,3 +313,15 @@ void Editor::onTileSelect(TileSelectEvent &event)
   tileCol = event.col;
   tileRow = event.row;
 };
+
+void Editor::onRunLua(RunLUAEvent &event)
+{
+  lua.script(event.code);
+
+  sol::optional<sol::function> hasFunc = lua["run"];
+  if (hasFunc != sol::nullopt)
+  {
+    sol::function func = lua["run"];
+    func();
+  }
+}

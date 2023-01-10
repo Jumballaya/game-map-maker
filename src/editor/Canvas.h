@@ -1,7 +1,10 @@
 #ifndef CANVAS_H
 #define CANVAS_H
 
+#include <cmath>
+
 #include <SDL2/SDL.h>
+#include <glm/glm.hpp>
 
 class Canvas
 {
@@ -23,6 +26,33 @@ public:
   const int &getXPosition() const { return posX; }
   const int &getYPosition() const { return posY; }
   const int &getTileSize() const { return tileSize; }
+
+  const glm::vec2 getTileCoords(glm::vec2 position, double zoom)
+  {
+    int xIn = static_cast<int>(position.x / zoom);
+    int yIn = static_cast<int>(position.y / zoom);
+    int xCanvas = static_cast<int>((posX - ((width * zoom) / 2)) / zoom);
+    int yCanvas = static_cast<int>((posY - ((height * zoom) / 2)) / zoom);
+    glm::vec2 offset = glm::vec2(xIn - xCanvas, yIn - yCanvas);
+    if (offset.x < 0 || offset.y < 0)
+    {
+      return glm::vec2(-1, -1);
+    }
+
+    int tileWidth = width / tileSize;
+    int x = static_cast<int>(std::floor((offset.x / tileSize)));
+    int y = static_cast<int>(std::floor((offset.y / tileSize)));
+    return glm::vec2(x, y);
+  };
+
+  SDL_Rect getRect(double zoom)
+  {
+    int x = static_cast<int>(posX - ((width * zoom) / 2.0));
+    int y = static_cast<int>(posY - ((height * zoom) / 2.0));
+    int w = static_cast<int>(width * zoom);
+    int h = static_cast<int>(height * zoom);
+    return {x, y, w, h};
+  }
 
   void setBackgroundColors(SDL_Color light, SDL_Color dark)
   {
@@ -47,8 +77,8 @@ public:
 
   void draw(SDL_Renderer *renderer, double zoom)
   {
-    int yStart = posY - ((height * zoom) / 2);
-    int xStart = posX - ((width * zoom) / 2);
+    int yStart = static_cast<int>(posY - ((height * zoom) / 2));
+    int xStart = static_cast<int>(posX - ((width * zoom) / 2));
     for (int y = 0; y < height / tileSize; y++)
     {
       int yPos = yStart + (y * tileSize * zoom);

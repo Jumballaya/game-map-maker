@@ -4,8 +4,9 @@
 #include <memory>
 #include <string>
 #include <SDL2/SDL.h>
-#include "../gui/GUI.h"
+#include "../../libs/sol/sol.hpp"
 
+#include "../gui/GUI.h"
 #include "../eventbus/EventBus.h"
 #include "../events/Events.h"
 #include "../assetstore/AssetStore.h"
@@ -38,6 +39,7 @@ public:
 
   // Events
   void onTileSelect(TileSelectEvent &event);
+  void onRunLua(RunLUAEvent &event);
 
   // Editor
   static int windowWidth;
@@ -65,6 +67,7 @@ private:
   int tileRow;
   int tileCol;
   int tileSize;
+  std::unique_ptr<TileMap> tileMap;
 
   int mapWidth;
   int mapHeight;
@@ -76,6 +79,8 @@ private:
   std::unique_ptr<Mouse> mouse;
   std::unique_ptr<Canvas> canvas;
   std::unique_ptr<EditorGUI> gui;
+
+  sol::state lua;
 
   int millisPreviousFrame = 0;
 

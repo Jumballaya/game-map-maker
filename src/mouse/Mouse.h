@@ -10,9 +10,29 @@ public:
   {
     position = glm::vec2(x, y);
     lastPos = glm::vec2(x, y);
+    size = glm::vec2(16, 16);
     zoom = 1;
   };
   ~Mouse() = default;
+
+  bool isHovering(SDL_Rect rect) const
+  {
+    int bX = position.x;
+    int bY = position.y;
+    int bW = size.x;
+    int bH = size.y;
+
+    int aX = rect.x;
+    int aY = rect.y;
+    int aW = rect.w;
+    int aH = rect.h;
+
+    return (
+        aX < bX + bW &&
+        aX + aW > bX &&
+        aY < bY + bH &&
+        aY + aH > bY);
+  }
 
   bool isClicked(int mouseButton)
   {
@@ -30,6 +50,7 @@ public:
     }
     return false;
   };
+
   bool isDragging()
   {
     bool isClicked = _clickedMiddle;
@@ -115,6 +136,8 @@ private:
 
   glm::vec2 position;
   glm::vec2 lastPos;
+
+  glm::vec2 size;
 };
 
 #endif

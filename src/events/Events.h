@@ -3,5 +3,6 @@
 
 #include "./KeyPressEvent.h"
 #include "./TileSelectEvent.h"
+#include "./RunLuaEvent.h"
 
 #endif

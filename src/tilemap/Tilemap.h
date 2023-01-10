@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include <iostream>
 
+#include <SDL2/SDL.h>
+#include <glm/glm.hpp>
+
 struct Tile
 {
 public:
@@ -67,8 +70,12 @@ public:
   int mapHeight;
   int tileSize;
 
-  Tile getTile(int row, int col) const;
-  void updateTile(int row, int col, int srcRow, int srcCol);
+  Tile getTile(glm::vec2 position) const;
+  void updateTile(glm::vec2 position, glm::vec2 tileData);
+
+  void clear();
+  void initialize(int mapWidth, int mapHeight, int tileSize);
+  void draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position, double zoom);
 
   // Tile getTile(int layer, int row, int col) const;
   // void updateTile(int layer, int row, int col, int srcRow, int srcCol);
