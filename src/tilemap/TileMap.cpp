@@ -1,6 +1,6 @@
 #include "./Tilemap.h"
 
-TileMap::TileMap(glm::vec2 mapSize, int tileSize)
+TileMap::TileMap(glm::vec2 mapSize, int tileSize, double zoom = 1.0)
 {
   initialize(mapSize, tileSize);
 };
@@ -67,15 +67,13 @@ void TileMap::clear()
   tiles.clear();
 }
 
-void TileMap::draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position, double zoom)
+void TileMap::draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position)
 {
   // Render the map
   int y = 0;
   int x = 0;
-  int width = static_cast<int>(mapWidth * tileSize * zoom);
-  int height = static_cast<int>(mapHeight * tileSize * zoom);
-  int xStart = position.x - (width / 2);
-  int yStart = position.y - (height / 2);
+  int xStart = position.x;
+  int yStart = position.y;
   for (auto row : tiles)
   {
     for (auto col : row)
@@ -99,4 +97,9 @@ void TileMap::draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 posit
     y++;
     x = 0;
   }
+}
+
+void TileMap::setZoom(double zoom)
+{
+  this->zoom = zoom;
 }

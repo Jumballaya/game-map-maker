@@ -9,12 +9,13 @@
 class Canvas
 {
 public:
-  Canvas(int x = 0, int y = 0, int tileSize = 16)
+  Canvas(int x = 0, int y = 0, int tileSize = 16, double zoom = 1.0)
   {
     posX = x;
     posY = y;
     width = 0;
     height = 0;
+    this->zoom = zoom;
     this->tileSize = tileSize;
     this->lightColor = {77, 77, 77};
     this->darkColor = {44, 44, 44};
@@ -23,16 +24,26 @@ public:
 
   const int &getWidth() const { return width; }
   const int &getHeight() const { return height; }
-  const int &getXPosition() const { return posX; }
-  const int &getYPosition() const { return posY; }
-  const int &getTileSize() const { return tileSize; }
 
-  const glm::vec2 getTileCoords(glm::vec2 position, double zoom)
+  // Accounting for this here, so it doesn't have to been done elsewhere
+  int getXPosition() const
   {
-    int xIn = static_cast<int>(position.x / zoom);
-    int yIn = static_cast<int>(position.y / zoom);
-    int xCanvas = static_cast<int>((posX - ((width * zoom) / 2)) / zoom);
-    int yCanvas = static_cast<int>((posY - ((height * zoom) / 2)) / zoom);
+    return static_cast<int>(posX - ((width * zoom) / 2.0));
+  }
+  // Accounting for this here, so it doesn't have to been done elsewhere
+  int getYPosition() const
+  {
+    return static_cast<int>(posY - ((height * zoom) / 2.0));
+  }
+
+  const int getTileSize() const { return tileSize; }
+
+  const glm::vec2 getTileCoords(glm::vec2 point)
+  {
+    int xIn = static_cast<int>(point.x / zoom);
+    int yIn = static_cast<int>(point.y / zoom);
+    int xCanvas = static_cast<int>(getXPosition() / zoom);
+    int yCanvas = static_cast<int>(getYPosition() / zoom);
     glm::vec2 offset = glm::vec2(xIn - xCanvas, yIn - yCanvas);
     if (offset.x < 0 || offset.y < 0)
     {
@@ -44,13 +55,11 @@ public:
     return glm::vec2(x, y);
   };
 
-  SDL_Rect getRect(double zoom)
+  SDL_Rect getRect()
   {
-    int x = static_cast<int>(posX - ((width * zoom) / 2.0));
-    int y = static_cast<int>(posY - ((height * zoom) / 2.0));
     int w = static_cast<int>(width * zoom);
     int h = static_cast<int>(height * zoom);
-    return {x, y, w, h};
+    return {getXPosition(), getYPosition(), w, h};
   }
 
   void setBackgroundColors(SDL_Color light, SDL_Color dark)
@@ -59,6 +68,10 @@ public:
     this->darkColor = dark;
   }
 
+  void setZoom(double zoom)
+  {
+    this->zoom = zoom;
+  }
   void setTileSize(int tileSize) { this->tileSize = tileSize; }
   void setWidth(int w) { width = w; }
   void setHeight(int h) { height = h; }
@@ -74,17 +87,17 @@ public:
     posY += y;
   }
 
-  void draw(SDL_Renderer *renderer, double zoom)
+  void draw(SDL_Renderer *renderer)
   {
-    int yStart = static_cast<int>(posY - ((height * zoom) / 2));
-    int xStart = static_cast<int>(posX - ((width * zoom) / 2));
+    int yStart = getYPosition();
+    int xStart = getXPosition();
     int tileZoom = static_cast<int>(tileSize * zoom);
     for (int y = 0; y < height / tileSize; y++)
     {
-      int yPos = yStart + (y * tileZoom);
+      int yPos = yStart + static_cast<int>((y * tileSize * zoom));
       for (int x = 0; x < width / tileSize; x++)
       {
-        int xPos = xStart + (x * tileZoom);
+        int xPos = xStart + static_cast<int>((x * tileSize * zoom));
         SDL_Rect checkerRect = {xPos, yPos, tileZoom, tileZoom};
         if ((x + y) % 2 == 0)
         {
@@ -103,6 +116,8 @@ private:
   int width;
   int height;
   int tileSize;
+
+  double zoom;
 
   int posX;
   int posY;

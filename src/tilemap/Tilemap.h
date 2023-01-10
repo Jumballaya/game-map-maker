@@ -63,19 +63,22 @@ public:
 class TileMap
 {
 public:
-  TileMap(glm::vec2 mapSize, int tileSize);
+  TileMap(glm::vec2 mapSize, int tileSize, double zoom);
   ~TileMap();
 
   int mapWidth;
   int mapHeight;
   int tileSize;
+  double zoom;
 
   Tile getTile(glm::vec2 position) const;
   void updateTile(glm::vec2 position, glm::vec2 tileData);
 
+  void setZoom(double zoom);
+
   void clear();
   void initialize(glm::vec2 mapSize, int tileSize);
-  void draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position, double zoom);
+  void draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position);
 
   // Tile getTile(int layer, int row, int col) const;
   // void updateTile(int layer, int row, int col, int srcRow, int srcCol);

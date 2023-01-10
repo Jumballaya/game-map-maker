@@ -18,10 +18,13 @@ Editor::Editor()
   running = false;
   assetStore = std::make_unique<AssetStore>();
   eventBus = std::make_unique<EventBus>();
-  tileMap = std::make_unique<TileMap>(glm::vec2(0), 0);
+  tileMap = std::make_unique<TileMap>(glm::vec2(0), 0, 1.0);
   canvas = std::make_unique<Canvas>(0, 0, 0);
   mouse = std::make_unique<Mouse>(0, 0);
   gui = std::make_unique<EditorGUI>();
+
+  canvas->setZoom(mouse->getZoom());
+  tileMap->setZoom(mouse->getZoom());
 
   selectedTileData = glm::vec2(0);
   mapTileSize = glm::vec2(0);
@@ -195,6 +198,8 @@ void Editor::processInput()
       {
         mouse->zoomMinus();
       }
+      canvas->setZoom(mouse->getZoom());
+      tileMap->setZoom(mouse->getZoom());
       break;
     }
   }
@@ -213,6 +218,9 @@ void Editor::update()
   io.DeltaTime = deltaTime;
 
   // Update Mouse Stuff
+  canvas->setZoom(mouse->getZoom());
+  tileMap->setZoom(mouse->getZoom());
+
   if (mouse->isDragging())
   {
     auto offset = mouse->getDragOffset();
@@ -222,10 +230,10 @@ void Editor::update()
   SDL_GetMouseState(&mouseX, &mouseY);
   mouse->move(mouseX, mouseY);
 
-  if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect(mouse->getZoom())))
+  if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect()))
   {
     // 1. Get tile location from canvas
-    glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition(), mouse->getZoom());
+    glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
 
     // 2. Insert the currently selected tile (col/row) into the tilemap
     if (tileCoords.x >= 0 && tileCoords.y >= 0)
@@ -254,20 +262,25 @@ void Editor::render()
   SDL_RenderFillRect(renderer, &rect);
 
   // Canvas
-  canvas->draw(renderer, mouseZoom);
-  tileMap->draw(renderer, selectedTileset, glm::vec2(canvas->getXPosition(), canvas->getYPosition()), mouseZoom);
+  canvas->draw(renderer);
+  tileMap->draw(renderer, selectedTileset, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
 
-  if (mouse->isHovering(canvas->getRect(mouseZoom)))
+  // Render tile to place at the mouse cursor
+  // Only render if hovering over the canvas
+  if (mouse->isHovering(canvas->getRect()))
   {
     // Render selected tile at the mouse
-    glm::vec2 coords = canvas->getTileCoords(mouseCoords, mouseZoom);
-    int xPos = (canvas->getXPosition() - ((canvas->getWidth() * mouseZoom) / 2)) + (coords.x * tileSize * mouseZoom);
-    int xSrcRect = selectedTileData.x * tileSize;
-    int yPos = (canvas->getYPosition() - ((canvas->getHeight() * mouseZoom) / 2)) + (coords.y * tileSize * mouseZoom);
-    int ySrcRect = selectedTileData.y * tileSize;
-    SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
-    SDL_Rect dstrect = {xPos, yPos, static_cast<int>(tileSize * mouseZoom), static_cast<int>(tileSize * mouseZoom)};
-    SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
+    glm::vec2 coords = canvas->getTileCoords(mouseCoords);
+    if (coords.x >= 0 && coords.y >= 0)
+    {
+      int xPos = (canvas->getXPosition() + (coords.x * tileSize * mouseZoom));
+      int xSrcRect = selectedTileData.x * tileSize;
+      int yPos = (canvas->getYPosition() + (coords.y * tileSize * mouseZoom));
+      int ySrcRect = selectedTileData.y * tileSize;
+      SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
+      SDL_Rect dstrect = {xPos, yPos, static_cast<int>(tileSize * mouseZoom), static_cast<int>(tileSize * mouseZoom)};
+      SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
+    }
   }
 
   // GUI
@@ -281,6 +294,8 @@ void Editor::loadMap(std::string filePath)
   // Parse map file
 
   // Set values from file
+
+  // @TODO -- Move most of this data into a TileSet class
   selectedTileset = assetStore->getTexture("tilemap");
   mapTileSize.x = 32;
   mapTileSize.y = 32;

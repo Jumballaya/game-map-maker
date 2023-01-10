@@ -3,11 +3,18 @@
 #include <string>
 #include <vector>
 
-enum LogType
+enum class LogType
 {
-  LOG_INFO,
-  LOG_WARNING,
-  LOG_ERROR,
+  INFO,
+  WARNING,
+  ERROR,
+};
+
+enum class LogLevel
+{
+  DEBUG,
+  DEV,
+  RELEASE,
 };
 
 struct LogEntry
@@ -19,6 +26,8 @@ struct LogEntry
 class Logger
 {
 public:
+  static LogLevel level;
+
   static std::vector<LogEntry> messages;
 
   static void Log(const std::string &message);
