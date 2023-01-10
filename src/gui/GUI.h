@@ -17,21 +17,17 @@ public:
   EditorGUI() = default;
   ~EditorGUI() = default;
   void render(
-      int imgWidth,
-      int imgHeight,
+      glm::vec2 imageSize,
       int tileSize,
-      int tileCol,
-      int tileRow,
+      glm::vec2 selectedTileData,
       std::unique_ptr<Mouse> &mouse,
       std::unique_ptr<EventBus> &eventBus,
       SDL_Texture *selectedTileset);
 
   void renderSidebar(
-      int imgWidth,
-      int imgHeight,
+      glm::vec2 imageSize,
       int tileSize,
-      int tileCol,
-      int tileRow,
+      glm::vec2 selectedTileData,
       std::unique_ptr<Mouse> &mouse,
       std::unique_ptr<EventBus> &eventBus,
       SDL_Texture *selectedTileset);

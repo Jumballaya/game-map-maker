@@ -1,8 +1,8 @@
 #include "./Tilemap.h"
 
-TileMap::TileMap(int mapWidth, int mapHeight, int tileSize)
+TileMap::TileMap(glm::vec2 mapSize, int tileSize)
 {
-  initialize(mapWidth, mapHeight, tileSize);
+  initialize(mapSize, tileSize);
 };
 
 TileMap::~TileMap()
@@ -10,10 +10,10 @@ TileMap::~TileMap()
   clear();
 }
 
-void TileMap::initialize(int mapWidth, int mapHeight, int tileSize)
+void TileMap::initialize(glm::vec2 mapSize, int tileSize)
 {
-  this->mapWidth = mapWidth;
-  this->mapHeight = mapHeight;
+  this->mapWidth = mapSize.x;
+  this->mapHeight = mapSize.y;
   this->tileSize = tileSize;
   for (int y = 0; y < mapHeight; y++)
   {

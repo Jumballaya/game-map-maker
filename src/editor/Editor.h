@@ -64,15 +64,11 @@ private:
   // Draws background, then mapdata
   // Multiple layers
 
-  int tileRow;
-  int tileCol;
   int tileSize;
+  glm::vec2 selectedTileData;
   std::unique_ptr<TileMap> tileMap;
-
-  int mapWidth;
-  int mapHeight;
-  int imgWidth;
-  int imgHeight;
+  glm::vec2 mapTileSize;
+  glm::vec2 imageSize;
 
   std::unique_ptr<AssetStore> assetStore;
   std::unique_ptr<EventBus> eventBus;

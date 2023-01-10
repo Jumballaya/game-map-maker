@@ -4,11 +4,9 @@
 #include "../events/Events.h"
 
 void EditorGUI::render(
-    int imgWidth,
-    int imgHeight,
+    glm::vec2 imageSize,
     int tileSize,
-    int tileCol,
-    int tileRow,
+    glm::vec2 selectedTileData,
     std::unique_ptr<Mouse> &mouse,
     std::unique_ptr<EventBus> &eventBus,
     SDL_Texture *selectedTileset)
@@ -24,7 +22,7 @@ void EditorGUI::render(
   //////////////
   //  SIDEBAR
   ///////////////////
-  renderSidebar(imgWidth, imgHeight, tileSize, tileCol, tileRow, mouse, eventBus, selectedTileset);
+  renderSidebar(imageSize, tileSize, selectedTileData, mouse, eventBus, selectedTileset);
 
   ///////////////
   //  OPEN FILE DIALOG
@@ -39,17 +37,15 @@ void EditorGUI::render(
 }
 
 void EditorGUI::renderSidebar(
-    int imageWidth,
-    int imageHeight,
+    glm::vec2 imageSize,
     int tileSize,
-    int tileCol,
-    int tileRow,
+    glm::vec2 selectedTileData,
     std::unique_ptr<Mouse> &mouse,
     std::unique_ptr<EventBus> &eventBus,
     SDL_Texture *selectedTileset)
 {
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
-  int sideBarWidth = imageWidth + tileSize;
+  int sideBarWidth = imageSize.x + tileSize;
   ImGui::SetNextWindowSize(ImVec2(sideBarWidth, Editor::windowHeight - 20), 0);
   ImGui::SetNextWindowPos(ImVec2(Editor::windowWidth - sideBarWidth, 20));
   ImGui::Begin("Tiles and Textures", NULL, windowFlags);
@@ -57,25 +53,25 @@ void EditorGUI::renderSidebar(
   // START TILE PICKER
   ImGui::Text("Tile Selection", 22);
   ImGui::Separator();
-  ImGui::BeginChild("tiles", ImVec2(sideBarWidth, imageHeight + 30), false, ImGuiWindowFlags_HorizontalScrollbar);
+  ImGui::BeginChild("tiles", ImVec2(sideBarWidth, imageSize.y + 30), false, ImGuiWindowFlags_HorizontalScrollbar);
 
   auto scrollY = ImGui::GetScrollY();
   auto scrollX = ImGui::GetScrollX();
 
-  ImGui::Image(selectedTileset, ImVec2(imageWidth, imageHeight));
+  ImGui::Image(selectedTileset, ImVec2(imageSize.x, imageSize.y));
 
   int mousePosX = static_cast<int>(ImGui::GetMousePos().x - ImGui::GetWindowPos().x + scrollX);
   int mousePosY = static_cast<int>(ImGui::GetMousePos().y - ImGui::GetWindowPos().y + scrollY);
 
-  int rows = imageHeight / tileSize;
-  int cols = imageWidth / tileSize;
+  int rows = imageSize.y / tileSize;
+  int cols = imageSize.x / tileSize;
 
   for (int i = 0; i < cols; i++)
   {
     for (int j = 0; j < rows; j++)
     {
       // Check to see if we are in the area of the desired 2D tile
-      if ((mousePosX >= (imageWidth / cols) * i && mousePosX <= (imageWidth / cols) + ((imageWidth / cols) * i)) && (mousePosY >= (imageHeight / rows) * j && mousePosY <= (imageHeight / rows) + ((imageHeight / rows) * j)))
+      if ((mousePosX >= (imageSize.x / cols) * i && mousePosX <= (imageSize.x / cols) + ((imageSize.x / cols) * i)) && (mousePosY >= (imageSize.y / rows) * j && mousePosY <= (imageSize.y / rows) + ((imageSize.y / rows) * j)))
       {
         if (ImGui::IsItemHovered())
         {
@@ -99,8 +95,8 @@ void EditorGUI::renderSidebar(
   ImGui::Text("Currently Selected Tile", 22);
   double smallTileSizeX = 1.0 / static_cast<double>(cols);
   double smallTileSizeY = 1.0 / static_cast<double>(rows);
-  double smallX = smallTileSizeX * static_cast<double>(tileCol);
-  double smallY = smallTileSizeY * static_cast<double>(tileRow);
+  double smallX = smallTileSizeX * static_cast<double>(selectedTileData.x);
+  double smallY = smallTileSizeY * static_cast<double>(selectedTileData.y);
   ImGui::Image(selectedTileset, ImVec2(tileSize * 2, tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
   ImGui::EndChild();
   // END CURRENT TILE

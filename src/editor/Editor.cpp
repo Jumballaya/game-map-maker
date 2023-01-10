@@ -18,10 +18,14 @@ Editor::Editor()
   running = false;
   assetStore = std::make_unique<AssetStore>();
   eventBus = std::make_unique<EventBus>();
-  tileMap = std::make_unique<TileMap>(0, 0, 0);
+  tileMap = std::make_unique<TileMap>(glm::vec2(0), 0);
   canvas = std::make_unique<Canvas>(0, 0, 0);
   mouse = std::make_unique<Mouse>(0, 0);
   gui = std::make_unique<EditorGUI>();
+
+  selectedTileData = glm::vec2(0);
+  mapTileSize = glm::vec2(0);
+  imageSize = glm::vec2(0);
 }
 
 Editor::~Editor()
@@ -223,13 +227,11 @@ void Editor::update()
   {
     // 1. Get tile location from canvas
     glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition(), mouse->getZoom());
-    Logger::Log("Place at: (" + std::to_string(tileCoords.x) + ", " + std::to_string(tileCoords.y) + ")");
 
     // 2. Insert the currently selected tile (col/row) into the tilemap
     if (tileCoords.x >= 0 && tileCoords.y >= 0)
     {
-      tileMap->updateTile(tileCoords, glm::vec2(tileCol, tileRow));
-      Logger::Log("Place the dang tile!");
+      tileMap->updateTile(tileCoords, selectedTileData);
     }
   }
 
@@ -259,17 +261,18 @@ void Editor::render()
   if (mouse->isHovering(canvas->getRect(mouseZoom)))
   {
     // Render selected tile at the mouse
-    int yPos = mouseCoords.y - ((tileSize * mouseZoom) / 2);
-    int ysrcRect = tileCol * tileSize;
-    int xPos = mouseCoords.x - ((tileSize * mouseZoom) / 2);
-    int xSrcRect = tileRow * tileSize;
-    SDL_Rect srcRect = {ysrcRect, xSrcRect, tileSize, tileSize};
+    glm::vec2 coords = canvas->getTileCoords(mouseCoords, mouseZoom);
+    int xPos = (canvas->getXPosition() - ((canvas->getWidth() * mouseZoom) / 2)) + (coords.x * tileSize * mouseZoom);
+    int xSrcRect = selectedTileData.x * tileSize;
+    int yPos = (canvas->getYPosition() - ((canvas->getHeight() * mouseZoom) / 2)) + (coords.y * tileSize * mouseZoom);
+    int ySrcRect = selectedTileData.y * tileSize;
+    SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
     SDL_Rect dstrect = {xPos, yPos, tileSize * mouseZoom, tileSize * mouseZoom};
     SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
   }
 
   // GUI
-  gui->render(imgWidth, imgHeight, tileSize, tileCol, tileRow, mouse, eventBus, selectedTileset);
+  gui->render(imageSize, tileSize, selectedTileData, mouse, eventBus, selectedTileset);
 
   SDL_RenderPresent(renderer);
 }
@@ -280,23 +283,23 @@ void Editor::loadMap(std::string filePath)
 
   // Set values from file
   selectedTileset = assetStore->getTexture("tilemap");
-  mapWidth = 32;
-  mapHeight = 32;
-  tileRow = 0;
-  tileCol = 0;
+  mapTileSize.x = 32;
+  mapTileSize.y = 32;
+  selectedTileData.x = 0;
+  selectedTileData.y = 0;
   tileSize = 16;
-  imgWidth = 12 * 16;
-  imgHeight = 10 * 16;
+  imageSize.x = 12 * tileSize;
+  imageSize.y = 10 * tileSize;
 
   // Set Canvas up
   canvas->setTileSize(tileSize);
-  canvas->setWidth(mapWidth * tileSize);
-  canvas->setHeight(mapHeight * tileSize);
+  canvas->setWidth(mapTileSize.x * tileSize);
+  canvas->setHeight(mapTileSize.y * tileSize);
   canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
   // Set Tilemap up
   tileMap->clear();
-  tileMap->initialize(mapHeight, mapWidth, tileSize);
+  tileMap->initialize(mapTileSize, tileSize);
 }
 
 void Editor::destroy()
@@ -310,8 +313,8 @@ void Editor::destroy()
 
 void Editor::onTileSelect(TileSelectEvent &event)
 {
-  tileCol = event.col;
-  tileRow = event.row;
+  selectedTileData.x = event.col;
+  selectedTileData.y = event.row;
 };
 
 void Editor::onRunLua(RunLUAEvent &event)
