@@ -198,6 +198,12 @@ void Editor::processInput()
       {
         mouse->zoomMinus();
       }
+
+      // Canvas and TileMap have a copy of the mouse zoom
+      // It ended up being much easier than always passing
+      // zoom into the canvas/tilemap methods
+      // Maybe this means that mouse should be holding the
+      // zoom value at all?
       canvas->setZoom(mouse->getZoom());
       tileMap->setZoom(mouse->getZoom());
       break;

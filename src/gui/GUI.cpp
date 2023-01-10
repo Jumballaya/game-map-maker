@@ -143,9 +143,25 @@ void EditorGUI::renderMainMenuBar(bool &openMapModal)
     if (ImGui::BeginMenu("Tools"))
     {
       static int toolInUse = 0;
-      ImGui::RadioButton("Tile Placer", &toolInUse, 0);
+      if (ImGui::RadioButton("Place Tile", &toolInUse, 0))
+      {
+        Logger::Log("Selected the place tile tool");
+      };
       ImGui::Separator();
-      ImGui::RadioButton("Tile Deleter", &toolInUse, 1);
+      if (ImGui::RadioButton("Erase Tile", &toolInUse, 1))
+      {
+        Logger::Log("Selected the erase tile tool");
+      };
+      ImGui::Separator();
+      if (ImGui::RadioButton("Fill Tiles", &toolInUse, 2))
+      {
+        Logger::Log("Selected the fill tiles tool");
+      };
+      ImGui::Separator();
+      if (ImGui::RadioButton("Fill Square", &toolInUse, 3))
+      {
+        Logger::Log("Selected the fill square tool");
+      };
       ImGui::EndMenu();
     }
 
