@@ -1,5 +1,6 @@
 #include "GUI.h"
 #include "../editor/Editor.h"
+#include "../editor/EditorState.h"
 
 #include "../events/Events.h"
 
@@ -17,7 +18,7 @@ void EditorGUI::render(
   //  MAIN MENU BAR
   /////////////////////
   bool openMapModal = false;
-  renderMainMenuBar(openMapModal);
+  renderMainMenuBar(openMapModal, eventBus);
 
   //////////////
   //  SIDEBAR
@@ -122,7 +123,7 @@ void EditorGUI::renderScriptBox(std::unique_ptr<EventBus> &eventBus)
   ImGui::EndChild();
 }
 
-void EditorGUI::renderMainMenuBar(bool &openMapModal)
+void EditorGUI::renderMainMenuBar(bool &openMapModal, std::unique_ptr<EventBus> &eventBus)
 {
   if (ImGui::BeginMainMenuBar())
   {
@@ -145,22 +146,17 @@ void EditorGUI::renderMainMenuBar(bool &openMapModal)
       static int toolInUse = 0;
       if (ImGui::RadioButton("Place Tile", &toolInUse, 0))
       {
-        Logger::Log("Selected the place tile tool");
+        eventBus->emit<TileToolSelectEvent>(TileTool::PlaceTile);
       };
       ImGui::Separator();
       if (ImGui::RadioButton("Erase Tile", &toolInUse, 1))
       {
-        Logger::Log("Selected the erase tile tool");
+        eventBus->emit<TileToolSelectEvent>(TileTool::EraseTile);
       };
       ImGui::Separator();
-      if (ImGui::RadioButton("Fill Tiles", &toolInUse, 2))
+      if (ImGui::RadioButton("Flood Fill Tiles", &toolInUse, 2))
       {
-        Logger::Log("Selected the fill tiles tool");
-      };
-      ImGui::Separator();
-      if (ImGui::RadioButton("Fill Square", &toolInUse, 3))
-      {
-        Logger::Log("Selected the fill square tool");
+        eventBus->emit<TileToolSelectEvent>(TileTool::FloodFill);
       };
       ImGui::EndMenu();
     }

@@ -29,6 +29,8 @@ Editor::Editor()
   selectedTileData = glm::vec2(0);
   mapTileSize = glm::vec2(0);
   imageSize = glm::vec2(0);
+
+  selectedTileTool = TileTool::PlaceTile;
 }
 
 Editor::~Editor()
@@ -96,6 +98,7 @@ void Editor::setup()
 
   eventBus->subscribe<TileSelectEvent>(this, &Editor::onTileSelect);
   eventBus->subscribe<RunLUAEvent>(this, &Editor::onRunLua);
+  eventBus->subscribe<TileToolSelectEvent>(this, &Editor::onTileToolSelect);
 
   loadMap("__init__");
 
@@ -238,13 +241,17 @@ void Editor::update()
 
   if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect()))
   {
-    // 1. Get tile location from canvas
-    glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
-
-    // 2. Insert the currently selected tile (col/row) into the tilemap
-    if (tileCoords.x >= 0 && tileCoords.y >= 0)
+    switch (selectedTileTool)
     {
-      tileMap->updateTile(tileCoords, selectedTileData);
+    case TileTool::PlaceTile:
+      placeTile();
+      break;
+    case TileTool::EraseTile:
+      eraseTile();
+      break;
+    case TileTool::FloodFill:
+      floodFill();
+      break;
     }
   }
 
@@ -253,11 +260,30 @@ void Editor::update()
   this->millisPreviousFrame = ticks;
 }
 
-void Editor::render()
+void Editor::renderCanvasCursor()
 {
+  if (selectedTileTool == TileTool::EraseTile)
+  {
+    return;
+  }
   glm::vec2 mouseCoords = mouse->getPosition();
   double mouseZoom = mouse->getZoom();
+  // Render selected tile at the mouse
+  glm::vec2 coords = canvas->getTileCoords(mouseCoords);
+  if (coords.x >= 0 && coords.y >= 0)
+  {
+    int xPos = (canvas->getXPosition() + (coords.x * tileSize * mouseZoom));
+    int xSrcRect = selectedTileData.x * tileSize;
+    int yPos = (canvas->getYPosition() + (coords.y * tileSize * mouseZoom));
+    int ySrcRect = selectedTileData.y * tileSize;
+    SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
+    SDL_Rect dstrect = {xPos, yPos, static_cast<int>(tileSize * mouseZoom), static_cast<int>(tileSize * mouseZoom)};
+    SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
+  }
+}
 
+void Editor::render()
+{
   SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
   SDL_RenderClear(renderer);
 
@@ -275,18 +301,7 @@ void Editor::render()
   // Only render if hovering over the canvas
   if (mouse->isHovering(canvas->getRect()))
   {
-    // Render selected tile at the mouse
-    glm::vec2 coords = canvas->getTileCoords(mouseCoords);
-    if (coords.x >= 0 && coords.y >= 0)
-    {
-      int xPos = (canvas->getXPosition() + (coords.x * tileSize * mouseZoom));
-      int xSrcRect = selectedTileData.x * tileSize;
-      int yPos = (canvas->getYPosition() + (coords.y * tileSize * mouseZoom));
-      int ySrcRect = selectedTileData.y * tileSize;
-      SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
-      SDL_Rect dstrect = {xPos, yPos, static_cast<int>(tileSize * mouseZoom), static_cast<int>(tileSize * mouseZoom)};
-      SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
-    }
+    renderCanvasCursor();
   }
 
   // GUI
@@ -322,6 +337,42 @@ void Editor::loadMap(std::string filePath)
   tileMap->initialize(mapTileSize, tileSize);
 }
 
+void Editor::placeTile()
+{
+  // 1. Get tile location from canvas
+  glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
+
+  // 2. Insert the currently selected tile (col/row) into the tilemap
+  if (tileCoords.x >= 0 && tileCoords.y >= 0)
+  {
+    tileMap->updateTile(tileCoords, selectedTileData);
+  }
+}
+
+void Editor::eraseTile()
+{
+  // 1. Get tile location from canvas
+  glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
+
+  // 2. Insert the currently selected tile (col/row) into the tilemap
+  if (tileCoords.x >= 0 && tileCoords.y >= 0)
+  {
+    tileMap->updateTile(tileCoords, glm::vec2(-1, -1));
+  }
+}
+
+void Editor::floodFill()
+{
+  // 1. Get tile location from canvas
+  glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
+
+  // 2. Insert the currently selected tile (col/row) into the tilemap
+  if (tileCoords.x >= 0 && tileCoords.y >= 0)
+  {
+    tileMap->floodFill(tileCoords, selectedTileData);
+  }
+}
+
 void Editor::destroy()
 {
   ImGuiSDL::Deinitialize();
@@ -347,4 +398,9 @@ void Editor::onRunLua(RunLUAEvent &event)
     sol::function func = lua["run"];
     func();
   }
+}
+
+void Editor::onTileToolSelect(TileToolSelectEvent &event)
+{
+  selectedTileTool = event.selection;
 }

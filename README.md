@@ -17,29 +17,28 @@ This game engine was created with the goal of further learning about game engine
 ## TODO
 
 - Add tool selection
-  - Place Tile
-  - Erase Tile
-  - Flood fill
-  - Square fill
+  - ~~Place Tile~~
+  - ~~Erase Tile~~
+  - ~~Flood fill~~
 - Add Editor State struct
-    - tool state
-    - tile selection state
-    - map tile data (tile size, map size in tiles, name, etc.)
-        This map tile data will come from the XML map docs later on
+  - tool state
+  - tile selection state
+  - map tile data (tile size, map size in tiles, name, etc.)
+      This map tile data will come from the XML map docs later on
 
-  - Add undo/redo (Game Programming Patterns has a simple implementation in one of the chapters)
-    - Command pattern
+- Add undo/redo (Game Programming Patterns has a simple implementation in one of the chapters)
+  - Command pattern
   - Add Mouse coords when over the canvas (both tile and pixel coords)
     - Message bar at the bottom for coords
       - Will eventually have messages for 'placed tile, ctrl+z to undo' type messages
-  - Add Multi-layer support
-    - UI update for layers panel
-    - Currently selected layer
-    - Tile tool on a layer
-    - Tiles should now hold x/y data instead of row/col data
+- Add Multi-layer support
+  - UI update for layers panel
+  - Currently selected layer
+  - Tile tool on a layer
+  - Tiles should now hold x/y data instead of row/col data
 - Add Options dropdown
-    - GUI dropdown
-      - Snap to grid on/off
+  - GUI dropdown
+    - Snap to grid on/off
 - Add pugixml and XML map file format
   - Document the file format
   - Read file and turn it into a TileMap
@@ -61,6 +60,11 @@ This game engine was created with the goal of further learning about game engine
 - Hotkeys
   - All the basic ctrl/cmd + __
   - Tool hotkeys (e for erase, b for place, f for fill, p for square fill)
+
+- Expand Tools
+  - Selection tools
+    - Single/Square/Fill
+  - Eye dropper tool
 
 - UI Overhaul
   - Dynamic management of UI size/position

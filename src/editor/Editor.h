@@ -11,6 +11,7 @@
 #include "../events/Events.h"
 #include "../assetstore/AssetStore.h"
 #include "Canvas.h"
+#include "./EditorState.h"
 #include "../mouse/Mouse.h"
 #include "../tilemap/Tilemap.h"
 
@@ -37,8 +38,15 @@ public:
   //
   void loadMap(std::string filePath);
 
+  // Drawing Tools
+  void renderCanvasCursor();
+  void placeTile();
+  void eraseTile();
+  void floodFill();
+
   // Events
   void onTileSelect(TileSelectEvent &event);
+  void onTileToolSelect(TileToolSelectEvent &event);
   void onRunLua(RunLUAEvent &event);
 
   // Editor
@@ -79,6 +87,8 @@ private:
   sol::state lua;
 
   int millisPreviousFrame = 0;
+
+  TileTool selectedTileTool;
 
   bool running;
   bool isDebug;

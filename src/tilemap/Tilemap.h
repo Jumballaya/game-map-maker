@@ -73,6 +73,7 @@ public:
 
   Tile getTile(glm::vec2 position) const;
   void updateTile(glm::vec2 position, glm::vec2 tileData);
+  void floodFill(glm::vec2 position, glm::vec2 tileData);
 
   void setZoom(double zoom);
 
@@ -85,6 +86,9 @@ public:
 
 private:
   std::vector<std::vector<Tile *>> tiles;
+
+  bool inBounds(glm::vec2 position);
+  void _floodFillRecursive(glm::vec2 position, glm::vec2 tileData, glm::vec2 targetValue, std::vector<int> *seen);
 
   // std::unordered_map<int, TileMapLayer> layers;
 };

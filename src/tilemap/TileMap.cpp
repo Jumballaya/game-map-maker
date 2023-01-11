@@ -1,4 +1,6 @@
 #include "./Tilemap.h"
+#include <algorithm>
+#include <cmath>
 
 TileMap::TileMap(glm::vec2 mapSize, int tileSize, double zoom = 1.0)
 {
@@ -47,12 +49,71 @@ void TileMap::updateTile(glm::vec2 position, glm::vec2 tileData)
   int srcCol = tileData.x;
   int srcRow = tileData.y;
 
-  if (row < static_cast<int>(tiles.size()) && col < static_cast<int>(tiles[row].size()))
+  if (inBounds(position))
   {
     tiles[row][col]->srcCol = srcCol;
     tiles[row][col]->srcRow = srcRow;
   }
 };
+
+void TileMap::floodFill(glm::vec2 position, glm::vec2 tileData)
+{
+  int col = position.x;
+  int row = position.y;
+  if (inBounds(position))
+  {
+    // Get the value of the tile clicked on, fill only connected tiles with that value
+    glm::vec2 targetValue = glm::vec2(tiles[row][col]->srcCol, tiles[row][col]->srcRow);
+
+    std::vector<int> seen;
+    _floodFillRecursive(position, tileData, targetValue, &seen);
+
+    for (auto pos : seen)
+    {
+      int row = std::floor(pos / mapWidth);
+      int col = pos % mapWidth;
+      updateTile(glm::vec2(col, row), tileData);
+    }
+
+    seen.clear();
+  }
+}
+
+void TileMap::_floodFillRecursive(glm::vec2 position, glm::vec2 tileData, glm::vec2 targetValue, std::vector<int> *seen)
+{
+  int col = position.x;
+  int row = position.y;
+  int srcCol = tileData.x;
+  int srcRow = tileData.y;
+
+  if (inBounds(position))
+  {
+    glm::vec2 currentValue = glm::vec2(tiles[row][col]->srcCol, tiles[row][col]->srcRow);
+    bool targetTileSame = currentValue.x == targetValue.x && currentValue.y == targetValue.y;
+    bool haveSeenTile = std::count(seen->begin(), seen->end(), col + (row * mapWidth));
+
+    if (targetTileSame && !haveSeenTile)
+    {
+      // fill the tile
+      tiles[row][col]->srcCol = srcCol;
+      tiles[row][col]->srcRow = srcRow;
+
+      // add to seen vector
+      seen->push_back(col + (row * mapWidth));
+
+      // Loop through and fill all connected tiles (to the immediately l/r t/b)
+      glm::vec2 left = glm::vec2(position.x - 1, position.y);
+      glm::vec2 right = glm::vec2(position.x + 1, position.y);
+      glm::vec2 top = glm::vec2(position.x, position.y - 1);
+      glm::vec2 bottom = glm::vec2(position.x, position.y + 1);
+
+      _floodFillRecursive(left, tileData, targetValue, seen);
+      _floodFillRecursive(right, tileData, targetValue, seen);
+      _floodFillRecursive(top, tileData, targetValue, seen);
+      _floodFillRecursive(bottom, tileData, targetValue, seen);
+    }
+  };
+}
 
 void TileMap::clear()
 {
@@ -102,4 +163,16 @@ void TileMap::draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 posit
 void TileMap::setZoom(double zoom)
 {
   this->zoom = zoom;
+}
+
+bool TileMap::inBounds(glm::vec2 position)
+{
+  bool inRowBounds = position.y >= 0 && position.y < static_cast<int>(tiles.size());
+  if (!inRowBounds)
+  {
+    return false;
+  }
+
+  bool inColBounds = position.x >= 0 && position.x < static_cast<int>(tiles[0].size());
+  return inRowBounds && inColBounds;
 }
