@@ -56,14 +56,7 @@ public:
 private:
   SDL_Window *window;
   SDL_Renderer *renderer;
-
-  SDL_Texture *selectedTileset;
-
-  // EditorState struct
-  // stores main state
-  //  current selected tile
-  //  current tileset
-  //  isRunning
+  EditorState state;
 
   // MapCanvas class
   // Map data struct to be populated with map data
@@ -72,12 +65,7 @@ private:
   // Draws background, then mapdata
   // Multiple layers
 
-  int tileSize;
-  glm::vec2 selectedTileData;
   std::unique_ptr<TileMap> tileMap;
-  glm::vec2 mapTileSize;
-  glm::vec2 imageSize;
-
   std::unique_ptr<AssetStore> assetStore;
   std::unique_ptr<EventBus> eventBus;
   std::unique_ptr<Mouse> mouse;
@@ -85,13 +73,6 @@ private:
   std::unique_ptr<EditorGUI> gui;
 
   sol::state lua;
-
-  int millisPreviousFrame = 0;
-
-  TileTool selectedTileTool;
-
-  bool running;
-  bool isDebug;
 };
 
 #endif

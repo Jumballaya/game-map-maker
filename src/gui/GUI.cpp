@@ -17,8 +17,8 @@ void EditorGUI::render(
   ///////////////////////
   //  MAIN MENU BAR
   /////////////////////
-  bool openMapModal = false;
-  renderMainMenuBar(openMapModal, eventBus);
+  static bool openMapModal = false; // check against EditorState
+  renderMainMenuBar(eventBus);
 
   //////////////
   //  SIDEBAR
@@ -123,7 +123,7 @@ void EditorGUI::renderScriptBox(std::unique_ptr<EventBus> &eventBus)
   ImGui::EndChild();
 }
 
-void EditorGUI::renderMainMenuBar(bool &openMapModal, std::unique_ptr<EventBus> &eventBus)
+void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus)
 {
   if (ImGui::BeginMainMenuBar())
   {
@@ -131,7 +131,8 @@ void EditorGUI::renderMainMenuBar(bool &openMapModal, std::unique_ptr<EventBus> 
     {
       if (ImGui::MenuItem("Open Map"))
       {
-        openMapModal = true;
+        // @TODO: Use events and set the state on the EditorState struct
+        // openMapModal = true;
       }
       if (ImGui::MenuItem("Save Map"))
       {

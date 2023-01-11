@@ -32,7 +32,7 @@ public:
       std::unique_ptr<EventBus> &eventBus,
       SDL_Texture *selectedTileset);
 
-  void renderMainMenuBar(bool &openMapModal, std::unique_ptr<EventBus> &eventBus);
+  void renderMainMenuBar(std::unique_ptr<EventBus> &eventBus);
 
   // Modals
   void renderOpenMapModal(std::unique_ptr<EventBus> &eventBus);

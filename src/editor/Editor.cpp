@@ -15,7 +15,6 @@ int Editor::windowHeight;
 Editor::Editor()
 {
   Logger::Log("[Editor] constructor called");
-  running = false;
   assetStore = std::make_unique<AssetStore>();
   eventBus = std::make_unique<EventBus>();
   tileMap = std::make_unique<TileMap>(glm::vec2(0), 0, 1.0);
@@ -25,12 +24,6 @@ Editor::Editor()
 
   canvas->setZoom(mouse->getZoom());
   tileMap->setZoom(mouse->getZoom());
-
-  selectedTileData = glm::vec2(0);
-  mapTileSize = glm::vec2(0);
-  imageSize = glm::vec2(0);
-
-  selectedTileTool = TileTool::PlaceTile;
 }
 
 Editor::~Editor()
@@ -79,7 +72,7 @@ void Editor::initialize()
 
   ImGui::CreateContext();
   ImGuiSDL::Initialize(renderer, windowWidth, windowHeight);
-  running = true;
+  state.running = true;
 }
 
 void Editor::setup()
@@ -115,7 +108,7 @@ void Editor::setup()
 void Editor::run()
 {
   setup();
-  while (running)
+  while (state.running)
   {
     processInput();
     update();
@@ -179,7 +172,7 @@ void Editor::processInput()
       break;
 
     case SDL_QUIT:
-      running = false;
+      state.running = false;
       break;
 
     case SDL_KEYDOWN:
@@ -187,7 +180,7 @@ void Editor::processInput()
       switch (sdlEvent.key.keysym.sym)
       {
       case SDLK_ESCAPE:
-        running = false;
+        state.running = false;
         break;
       }
       break;
@@ -217,12 +210,12 @@ void Editor::processInput()
 void Editor::update()
 {
   Uint32 ticks = SDL_GetTicks();
-  int timeToWait = MILLISECS_PER_FRAME - (ticks - millisPreviousFrame);
+  int timeToWait = MILLISECS_PER_FRAME - (ticks - state.millisPreviousFrame);
   if (timeToWait > 0 && timeToWait <= MILLISECS_PER_FRAME)
   {
     SDL_Delay(timeToWait);
   }
-  double deltaTime = (ticks - millisPreviousFrame) / 1000.0f;
+  double deltaTime = (ticks - state.millisPreviousFrame) / 1000.0f;
   ImGuiIO &io = ImGui::GetIO();
   io.DeltaTime = deltaTime;
 
@@ -241,7 +234,7 @@ void Editor::update()
 
   if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect()))
   {
-    switch (selectedTileTool)
+    switch (state.selectedTileTool)
     {
     case TileTool::PlaceTile:
       placeTile();
@@ -257,12 +250,13 @@ void Editor::update()
 
   // End Mouse Stuff
 
-  this->millisPreviousFrame = ticks;
+  state.millisPreviousFrame = ticks;
 }
 
 void Editor::renderCanvasCursor()
 {
-  if (selectedTileTool == TileTool::EraseTile)
+  int tileSize = state.tileSize;
+  if (state.selectedTileTool == TileTool::EraseTile)
   {
     return;
   }
@@ -273,12 +267,12 @@ void Editor::renderCanvasCursor()
   if (coords.x >= 0 && coords.y >= 0)
   {
     int xPos = (canvas->getXPosition() + (coords.x * tileSize * mouseZoom));
-    int xSrcRect = selectedTileData.x * tileSize;
+    int xSrcRect = state.selectedTileData.x * tileSize;
     int yPos = (canvas->getYPosition() + (coords.y * tileSize * mouseZoom));
-    int ySrcRect = selectedTileData.y * tileSize;
+    int ySrcRect = state.selectedTileData.y * tileSize;
     SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
     SDL_Rect dstrect = {xPos, yPos, static_cast<int>(tileSize * mouseZoom), static_cast<int>(tileSize * mouseZoom)};
-    SDL_RenderCopy(renderer, selectedTileset, &srcRect, &dstrect);
+    SDL_RenderCopy(renderer, state.selectedTileset, &srcRect, &dstrect);
   }
 }
 
@@ -295,7 +289,7 @@ void Editor::render()
 
   // Canvas
   canvas->draw(renderer);
-  tileMap->draw(renderer, selectedTileset, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
+  tileMap->draw(renderer, state.selectedTileset, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
 
   // Render tile to place at the mouse cursor
   // Only render if hovering over the canvas
@@ -305,7 +299,7 @@ void Editor::render()
   }
 
   // GUI
-  gui->render(imageSize, tileSize, selectedTileData, mouse, eventBus, selectedTileset);
+  gui->render(state.imageSize, state.tileSize, state.selectedTileData, mouse, eventBus, state.selectedTileset);
 
   SDL_RenderPresent(renderer);
 }
@@ -317,24 +311,24 @@ void Editor::loadMap(std::string filePath)
   // Set values from file
 
   // @TODO -- Move most of this data into a TileSet class
-  selectedTileset = assetStore->getTexture("tilemap");
-  mapTileSize.x = 32;
-  mapTileSize.y = 32;
-  selectedTileData.x = 0;
-  selectedTileData.y = 0;
-  tileSize = 16;
-  imageSize.x = 12 * tileSize;
-  imageSize.y = 10 * tileSize;
+  state.selectedTileset = assetStore->getTexture("tilemap");
+  state.mapTileSize.x = 32;
+  state.mapTileSize.y = 32;
+  state.selectedTileData.x = 0;
+  state.selectedTileData.y = 0;
+  state.tileSize = 16;
+  state.imageSize.x = 12 * state.tileSize;
+  state.imageSize.y = 10 * state.tileSize;
 
   // Set Canvas up
-  canvas->setTileSize(tileSize);
-  canvas->setWidth(mapTileSize.x * tileSize);
-  canvas->setHeight(mapTileSize.y * tileSize);
+  canvas->setTileSize(state.tileSize);
+  canvas->setWidth(state.mapTileSize.x * state.tileSize);
+  canvas->setHeight(state.mapTileSize.y * state.tileSize);
   canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
   // Set Tilemap up
   tileMap->clear();
-  tileMap->initialize(mapTileSize, tileSize);
+  tileMap->initialize(state.mapTileSize, state.tileSize);
 }
 
 void Editor::placeTile()
@@ -345,7 +339,7 @@ void Editor::placeTile()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    tileMap->updateTile(tileCoords, selectedTileData);
+    tileMap->updateTile(tileCoords, state.selectedTileData);
   }
 }
 
@@ -369,7 +363,7 @@ void Editor::floodFill()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    tileMap->floodFill(tileCoords, selectedTileData);
+    tileMap->floodFill(tileCoords, state.selectedTileData);
   }
 }
 
@@ -384,8 +378,8 @@ void Editor::destroy()
 
 void Editor::onTileSelect(TileSelectEvent &event)
 {
-  selectedTileData.x = event.col;
-  selectedTileData.y = event.row;
+  state.selectedTileData.x = event.col;
+  state.selectedTileData.y = event.row;
 };
 
 void Editor::onRunLua(RunLUAEvent &event)
@@ -402,5 +396,5 @@ void Editor::onRunLua(RunLUAEvent &event)
 
 void Editor::onTileToolSelect(TileToolSelectEvent &event)
 {
-  selectedTileTool = event.selection;
+  state.selectedTileTool = event.selection;
 }
