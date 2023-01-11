@@ -7,7 +7,6 @@
 
 #include "Editor.h"
 #include "../logger/Logger.h"
-#include "../events/Events.h"
 
 int Editor::windowWidth;
 int Editor::windowHeight;
@@ -15,9 +14,10 @@ int Editor::windowHeight;
 Editor::Editor()
 {
   Logger::Log("[Editor] constructor called");
+  commandManager = std::make_unique<CommandManager>();
   assetStore = std::make_unique<AssetStore>();
   eventBus = std::make_unique<EventBus>();
-  tileMap = std::make_unique<TileMap>(glm::vec2(0), 0, 1.0);
+  tileMap = std::make_shared<TileMap>(glm::vec2(0), 0, 1.0);
   canvas = std::make_unique<Canvas>(0, 0, 0);
   mouse = std::make_unique<Mouse>(0, 0);
   gui = std::make_unique<EditorGUI>();
@@ -182,6 +182,13 @@ void Editor::processInput()
       case SDLK_ESCAPE:
         state.running = false;
         break;
+
+      case SDLK_z:
+        commandManager->undo();
+        break;
+      case SDLK_y:
+        commandManager->redo();
+        break;
       }
       break;
 
@@ -339,7 +346,7 @@ void Editor::placeTile()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    tileMap->updateTile(tileCoords, state.selectedTileData);
+    commandManager->execute<FillTileCommand>(tileMap, tileCoords, state.selectedTileData);
   }
 }
 

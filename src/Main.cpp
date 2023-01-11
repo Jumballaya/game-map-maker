@@ -1,6 +1,11 @@
 #include <string>
 #include <iostream>
 
+#include "../libs/glm/glm.hpp"
+
+#include "./commands/CommandManager.h"
+#include "./commands/TestCommand.h"
+
 #include "./tilemap/Tilemap.h"
 
 #include "./editor/Editor.h"
@@ -12,6 +17,5 @@ int main(int argc, char *argv[])
     editor.initialize();
     editor.run();
     editor.destroy();
-
     return 0;
 }

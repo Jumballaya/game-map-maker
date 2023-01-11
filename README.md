@@ -26,15 +26,15 @@ Progress pic to mark this day
 
 ## TODO
 
-- Add tool selection
+- ~~Add tool selection~~
   - ~~Place Tile~~
   - ~~Erase Tile~~
   - ~~Flood fill~~
-- Add Editor State struct
-  - tool state
-  - tile selection state
-  - map tile data (tile size, map size in tiles, name, etc.)
-      This map tile data will come from the XML map docs later on
+- ~~Add Editor State struct~~
+  - ~~tool state~~
+  - ~~tile selection state~~
+  - ~~map tile data (tile size, map size in tiles, name, etc.)
+      This map tile data will come from the XML map docs later on~~
 
 - Add undo/redo (Game Programming Patterns has a simple implementation in one of the chapters)
   - Command pattern

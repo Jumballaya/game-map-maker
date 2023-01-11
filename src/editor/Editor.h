@@ -8,12 +8,15 @@
 
 #include "../gui/GUI.h"
 #include "../eventbus/EventBus.h"
-#include "../events/Events.h"
 #include "../assetstore/AssetStore.h"
 #include "Canvas.h"
 #include "./EditorState.h"
 #include "../mouse/Mouse.h"
 #include "../tilemap/Tilemap.h"
+#include "../commands/CommandManager.h"
+
+#include "../events/Events.h"
+#include "../commands/Commands.h"
 
 const int FPS = 30;
 const int MILLISECS_PER_FRAME = 1000 / FPS;
@@ -65,12 +68,13 @@ private:
   // Draws background, then mapdata
   // Multiple layers
 
-  std::unique_ptr<TileMap> tileMap;
+  std::shared_ptr<TileMap> tileMap;
   std::unique_ptr<AssetStore> assetStore;
   std::unique_ptr<EventBus> eventBus;
   std::unique_ptr<Mouse> mouse;
   std::unique_ptr<Canvas> canvas;
   std::unique_ptr<EditorGUI> gui;
+  std::unique_ptr<CommandManager> commandManager;
 
   sol::state lua;
 };
