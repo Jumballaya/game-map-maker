@@ -14,6 +14,16 @@ This game engine was created with the goal of further learning about game engine
 - glm `0.9.9`
 - dear imgui `1.83`
 
+## Progress Log
+
+### Jan. 10, 2023
+
+Basically just started on the the tile editor part of this long journey.
+
+Progress pic to mark this day
+![First Progress Pic](/screenshots/progress-2023-01-10.png)
+
+
 ## TODO
 
 - Add tool selection
