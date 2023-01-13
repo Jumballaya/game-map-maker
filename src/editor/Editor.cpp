@@ -347,7 +347,11 @@ void Editor::placeTile()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, state.selectedTileData);
+    Tile t = tileMap->getTile(tileCoords);
+    if (t.srcRow != state.selectedTileData.y && t.srcCol != state.selectedTileData.x)
+    {
+      commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, state.selectedTileData);
+    }
   }
 }
 
@@ -359,7 +363,11 @@ void Editor::eraseTile()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    tileMap->updateTile(tileCoords, glm::vec2(-1, -1));
+    Tile t = tileMap->getTile(tileCoords);
+    if (t.srcRow != -1 && t.srcCol != -1)
+    {
+      commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, glm::vec2(-1, -1));
+    }
   }
 }
 
