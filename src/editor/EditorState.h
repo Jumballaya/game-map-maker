@@ -23,6 +23,8 @@ public:
   bool running;
   bool isDebug;
 
+  Uint32 lastClick = 0;
+
   EditorState()
   {
     tileSize = 0;

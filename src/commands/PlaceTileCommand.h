@@ -8,10 +8,10 @@
 
 #include <memory>
 
-class FillTileCommand : public ICommand
+class PlaceTileCommand : public ICommand
 {
 public:
-  FillTileCommand(std::shared_ptr<TileMap> &tileMap, glm::vec2 targetTile, glm::vec2 tileValue)
+  PlaceTileCommand(std::shared_ptr<TileMap> &tileMap, glm::vec2 targetTile, glm::vec2 tileValue)
   {
     this->tileMap = tileMap;
     this->targetTile = targetTile;
@@ -21,7 +21,7 @@ public:
   void execute()
   {
     Tile previousTile = tileMap->getTile(targetTile);
-    previousTileValue = glm::vec2(previousTile.col, previousTile.row);
+    previousTileValue = glm::vec2(previousTile.srcCol, previousTile.srcRow);
     tileMap->updateTile(targetTile, tileValue);
   }
 

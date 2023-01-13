@@ -239,8 +239,9 @@ void Editor::update()
   SDL_GetMouseState(&mouseX, &mouseY);
   mouse->move(mouseX, mouseY);
 
-  if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect()))
+  if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect()) && ticks - state.lastClick > 50)
   {
+    state.lastClick = SDL_GetTicks();
     switch (state.selectedTileTool)
     {
     case TileTool::PlaceTile:
@@ -346,7 +347,7 @@ void Editor::placeTile()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    commandManager->execute<FillTileCommand>(tileMap, tileCoords, state.selectedTileData);
+    commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, state.selectedTileData);
   }
 }
 

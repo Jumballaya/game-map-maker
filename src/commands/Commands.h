@@ -1,6 +1,6 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-#include "./FillTileCommand.h"
+#include "./PlaceTileCommand.h"
 
 #endif

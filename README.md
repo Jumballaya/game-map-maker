@@ -38,7 +38,7 @@ Progress pic to mark this day
 
 - ~~Add undo/redo (Game Programming Patterns has a simple implementation in one of the chapters)~~
   - ~~Command pattern~~
-- Add a debounce time to commands
+- ~~Add a debounce time to commands~~
 - Add Mouse coords when over the canvas (both tile and pixel coords)
   - Message bar at the bottom for coords
     - Will eventually have messages for 'placed tile, ctrl+z to undo' type messages
