@@ -49,6 +49,8 @@ void Editor::initialize()
 
   this->windowWidth = dm.w;
   this->windowHeight = dm.h;
+  state.windowHeight = dm.h;
+  state.windowWidth = dm.w;
   this->window = SDL_CreateWindow(
       "Tile map editor",
       SDL_WINDOWPOS_CENTERED,
@@ -100,6 +102,10 @@ void Editor::setup()
   SDL_GetMouseState(&mouseX, &mouseY);
   mouse->move(mouseX, mouseY);
   mouse->move(mouseX, mouseY);
+
+  state.hoveringCanvas = false;
+  state.hoveringCoords.x = 0;
+  state.hoveringCoords.y = 0;
 
   // Setup LUA
   lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::os);
@@ -256,6 +262,14 @@ void Editor::update()
     }
   }
 
+  state.hoveringCanvas = mouse->isHovering(canvas->getRect());
+  if (state.hoveringCanvas)
+  {
+    glm::vec2 coords = canvas->getTileCoords(mouse->getPosition());
+    state.hoveringCoords.x = coords.x;
+    state.hoveringCoords.y = coords.y;
+  }
+
   // End Mouse Stuff
 
   state.millisPreviousFrame = ticks;
@@ -307,7 +321,7 @@ void Editor::render()
   }
 
   // GUI
-  gui->render(state.imageSize, state.tileSize, state.selectedTileData, mouse, eventBus, state.selectedTileset);
+  gui->render(state, mouse, eventBus);
 
   SDL_RenderPresent(renderer);
 }
@@ -348,7 +362,7 @@ void Editor::placeTile()
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
     Tile t = tileMap->getTile(tileCoords);
-    if (t.srcRow != state.selectedTileData.y && t.srcCol != state.selectedTileData.x)
+    if (!(t.srcRow == state.selectedTileData.y && t.srcCol == state.selectedTileData.x))
     {
       commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, state.selectedTileData);
     }
@@ -364,7 +378,7 @@ void Editor::eraseTile()
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
     Tile t = tileMap->getTile(tileCoords);
-    if (t.srcRow != -1 && t.srcCol != -1)
+    if (!(t.srcRow == -1 && t.srcCol == -1))
     {
       commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, glm::vec2(-1, -1));
     }

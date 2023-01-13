@@ -23,6 +23,12 @@ public:
   bool running;
   bool isDebug;
 
+  int windowWidth;
+  int windowHeight;
+
+  bool hoveringCanvas;
+  glm::vec2 hoveringCoords;
+
   Uint32 lastClick = 0;
 
   EditorState()
@@ -36,6 +42,8 @@ public:
     selectedTileTool = TileTool::PlaceTile;
     running = false;
     isDebug = false;
+    hoveringCoords = glm::vec2(0, 0);
+    hoveringCanvas = false;
   }
   ~EditorState() = default;
 };

@@ -1,16 +1,10 @@
 #include "GUI.h"
-#include "../editor/Editor.h"
-#include "../editor/EditorState.h"
-
 #include "../events/Events.h"
 
 void EditorGUI::render(
-    glm::vec2 imageSize,
-    int tileSize,
-    glm::vec2 selectedTileData,
+    EditorState state,
     std::unique_ptr<Mouse> &mouse,
-    std::unique_ptr<EventBus> &eventBus,
-    SDL_Texture *selectedTileset)
+    std::unique_ptr<EventBus> &eventBus)
 {
   ImGui::NewFrame();
 
@@ -23,7 +17,7 @@ void EditorGUI::render(
   //////////////
   //  SIDEBAR
   ///////////////////
-  renderSidebar(imageSize, tileSize, selectedTileData, mouse, eventBus, selectedTileset);
+  renderSidebar(state, mouse, eventBus);
 
   ///////////////
   //  OPEN FILE DIALOG
@@ -33,46 +27,65 @@ void EditorGUI::render(
     renderOpenMapModal(eventBus);
   }
 
+  //////////////////
+  /// Bottom Status Bar
+  ///////////////////
+  const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
+  ImGuiWindowFlags winFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
+  ImGui::SetNextWindowPos(ImVec2(0, main_viewport->Size.y - 90));
+  ImGui::SetNextWindowSize(ImVec2(main_viewport->Size.x, 90));
+  ImGui::Begin("Bottom Status Bar", NULL, winFlags);
+  if (state.hoveringCanvas)
+  {
+    ImGui::Text("Mouse Position - [%d, %d]", static_cast<int>(state.hoveringCoords.x), static_cast<int>(state.hoveringCoords.y));
+    ImGui::SameLine();
+    ImGui::Spacing();
+  }
+  ImGui::SameLine();
+  // ImGui::Text("Just placed a tile");
+
+  ImGui::End();
+
   ImGui::Render();
   ImGuiSDL::Render(ImGui::GetDrawData());
 }
 
 void EditorGUI::renderSidebar(
-    glm::vec2 imageSize,
-    int tileSize,
-    glm::vec2 selectedTileData,
+    EditorState state,
     std::unique_ptr<Mouse> &mouse,
-    std::unique_ptr<EventBus> &eventBus,
-    SDL_Texture *selectedTileset)
+    std::unique_ptr<EventBus> &eventBus)
 {
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
-  int sideBarWidth = imageSize.x + tileSize;
-  ImGui::SetNextWindowSize(ImVec2(sideBarWidth, Editor::windowHeight - 20), 0);
-  ImGui::SetNextWindowPos(ImVec2(Editor::windowWidth - sideBarWidth, 20));
+  const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
+  int sideBarWidth = main_viewport->Size.x * .2;
+  ImGui::SetNextWindowSize(ImVec2(sideBarWidth, state.windowHeight - 20), 0);
+  ImGui::SetNextWindowPos(ImVec2(state.windowWidth - sideBarWidth, 20));
   ImGui::Begin("Tiles and Textures", NULL, windowFlags);
 
   // START TILE PICKER
   ImGui::Text("Tile Selection", 22);
   ImGui::Separator();
-  ImGui::BeginChild("tiles", ImVec2(sideBarWidth, imageSize.y + 30), false, ImGuiWindowFlags_HorizontalScrollbar);
+  ImGui::BeginChild("tiles", ImVec2(sideBarWidth, state.imageSize.y + 30), false, ImGuiWindowFlags_HorizontalScrollbar);
 
   auto scrollY = ImGui::GetScrollY();
   auto scrollX = ImGui::GetScrollX();
 
-  ImGui::Image(selectedTileset, ImVec2(imageSize.x, imageSize.y));
+  ImGui::Image(state.selectedTileset, ImVec2(state.imageSize.x, state.imageSize.y));
 
   int mousePosX = static_cast<int>(ImGui::GetMousePos().x - ImGui::GetWindowPos().x + scrollX);
   int mousePosY = static_cast<int>(ImGui::GetMousePos().y - ImGui::GetWindowPos().y + scrollY);
 
-  int rows = imageSize.y / tileSize;
-  int cols = imageSize.x / tileSize;
+  int rows = state.imageSize.y / state.tileSize;
+  int cols = state.imageSize.x / state.tileSize;
 
   for (int i = 0; i < cols; i++)
   {
     for (int j = 0; j < rows; j++)
     {
       // Check to see if we are in the area of the desired 2D tile
-      if ((mousePosX >= (imageSize.x / cols) * i && mousePosX <= (imageSize.x / cols) + ((imageSize.x / cols) * i)) && (mousePosY >= (imageSize.y / rows) * j && mousePosY <= (imageSize.y / rows) + ((imageSize.y / rows) * j)))
+      bool mouseOverlapsX = mousePosX >= (state.imageSize.x / cols) * i && mousePosX <= (state.imageSize.x / cols) + ((state.imageSize.x / cols) * i);
+      bool mouseOverlapsY = mousePosY >= (state.imageSize.y / rows) * j && mousePosY <= (state.imageSize.y / rows) + ((state.imageSize.y / rows) * j);
+      if (mouseOverlapsX && mouseOverlapsY)
       {
         if (ImGui::IsItemHovered())
         {
@@ -96,9 +109,9 @@ void EditorGUI::renderSidebar(
   ImGui::Text("Currently Selected Tile", 22);
   double smallTileSizeX = 1.0 / static_cast<double>(cols);
   double smallTileSizeY = 1.0 / static_cast<double>(rows);
-  double smallX = smallTileSizeX * static_cast<double>(selectedTileData.x);
-  double smallY = smallTileSizeY * static_cast<double>(selectedTileData.y);
-  ImGui::Image(selectedTileset, ImVec2(tileSize * 2, tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
+  double smallX = smallTileSizeX * static_cast<double>(state.selectedTileData.x);
+  double smallY = smallTileSizeY * static_cast<double>(state.selectedTileData.y);
+  ImGui::Image(state.selectedTileset, ImVec2(state.tileSize * 2, state.tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
   ImGui::EndChild();
   // END CURRENT TILE
 

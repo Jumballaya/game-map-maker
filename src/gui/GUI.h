@@ -10,6 +10,7 @@
 #include "../../libs/imgui/imgui_impl_sdl.h"
 #include "../mouse/Mouse.h"
 #include "../eventbus/EventBus.h"
+#include "../editor/EditorState.h"
 
 class EditorGUI
 {
@@ -17,20 +18,14 @@ public:
   EditorGUI() = default;
   ~EditorGUI() = default;
   void render(
-      glm::vec2 imageSize,
-      int tileSize,
-      glm::vec2 selectedTileData,
+      EditorState state,
       std::unique_ptr<Mouse> &mouse,
-      std::unique_ptr<EventBus> &eventBus,
-      SDL_Texture *selectedTileset);
+      std::unique_ptr<EventBus> &eventBus);
 
   void renderSidebar(
-      glm::vec2 imageSize,
-      int tileSize,
-      glm::vec2 selectedTileData,
+      EditorState state,
       std::unique_ptr<Mouse> &mouse,
-      std::unique_ptr<EventBus> &eventBus,
-      SDL_Texture *selectedTileset);
+      std::unique_ptr<EventBus> &eventBus);
 
   void renderMainMenuBar(std::unique_ptr<EventBus> &eventBus);
 
