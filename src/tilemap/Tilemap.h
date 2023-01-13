@@ -71,6 +71,12 @@ public:
   int tileSize;
   double zoom;
 
+  int width;           // Width of the map in pixels
+  int height;          // Height of the map in pixels
+  int colSize;         // Width of the map in tiles
+  int rowSize;         // Height of the map in tiles
+  glm::vec2 _tileSize; // dimensions of a single tile
+
   Tile getTile(glm::vec2 position) const;
   void updateTile(glm::vec2 position, glm::vec2 tileData);
   void floodFill(glm::vec2 position, glm::vec2 tileData);
@@ -81,8 +87,14 @@ public:
   void initialize(glm::vec2 mapSize, int tileSize);
   void draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position);
 
-  // Tile getTile(int layer, int row, int col) const;
-  // void updateTile(int layer, int row, int col, int srcRow, int srcCol);
+  // WITH LAYERS
+  // Tile getTile(int layer, glm::vec2 position) const;
+  // void updateTile(int layer, glm::vec2 position, glm::vec2 tileData);
+  // void floodFill(int layer, glm::vec2 position, glm::vec2 tileData);
+  // int createLayer(std::string name);
+  // void renameLayer(int layerId, std::string name);
+  // void deleteLayer(int layerId);
+  // void moveLayer(int layerId, int layerIdToSwapWith);
 
 private:
   std::vector<std::vector<Tile *>> tiles;
