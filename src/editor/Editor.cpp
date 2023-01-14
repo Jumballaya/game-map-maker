@@ -277,7 +277,8 @@ void Editor::update()
 
 void Editor::renderCanvasCursor()
 {
-  int tileSize = state.tileSize;
+  auto selectedTileset = assetStore->getTileset(state.selectedTileset);
+  int tileSize = selectedTileset->tileSize;
   if (state.selectedTileTool == TileTool::EraseTile)
   {
     return;
@@ -294,7 +295,7 @@ void Editor::renderCanvasCursor()
     int ySrcRect = state.selectedTileData.y * tileSize;
     SDL_Rect srcRect = {xSrcRect, ySrcRect, tileSize, tileSize};
     SDL_Rect dstrect = {xPos, yPos, static_cast<int>(tileSize * mouseZoom), static_cast<int>(tileSize * mouseZoom)};
-    SDL_RenderCopy(renderer, state.selectedTileset, &srcRect, &dstrect);
+    SDL_RenderCopy(renderer, selectedTileset->getTexture(), &srcRect, &dstrect);
   }
 }
 
@@ -311,7 +312,8 @@ void Editor::render()
 
   // Canvas
   canvas->draw(renderer);
-  tileMap->draw(renderer, state.selectedTileset, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
+  SDL_Texture *texture = assetStore->getTileset(state.selectedTileset)->getTexture();
+  tileMap->draw(renderer, texture, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
 
   // Render tile to place at the mouse cursor
   // Only render if hovering over the canvas
@@ -321,7 +323,7 @@ void Editor::render()
   }
 
   // GUI
-  gui->render(state, mouse, eventBus);
+  gui->render(state, mouse, eventBus, assetStore);
 
   SDL_RenderPresent(renderer);
 }
@@ -329,28 +331,33 @@ void Editor::render()
 void Editor::loadMap(std::string filePath)
 {
   // Parse map file
+  // 1. Parse and create tilesets
+  // 2. Parse and create layers
 
   // Set values from file
 
   // @TODO -- Move most of this data into a TileSet class
-  state.selectedTileset = assetStore->getTexture("tilemap");
+  state.selectedTileset = "tilemap";
   state.mapTileSize.x = 32;
   state.mapTileSize.y = 32;
   state.selectedTileData.x = 0;
   state.selectedTileData.y = 0;
-  state.tileSize = 16;
-  state.imageSize.x = 12 * state.tileSize;
-  state.imageSize.y = 10 * state.tileSize;
+  int tileSize = 16;
+  glm::vec2 tilesetSizeTile(12 * tileSize, 10 * tileSize);
+  SDL_Surface *surface = IMG_Load("./assets/tiles_packed.png");
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+  SDL_FreeSurface(surface);
+  assetStore->addTileset("tilemap", texture, glm::vec2(12, 10), tilesetSizeTile, 16);
 
   // Set Canvas up
-  canvas->setTileSize(state.tileSize);
-  canvas->setWidth(state.mapTileSize.x * state.tileSize);
-  canvas->setHeight(state.mapTileSize.y * state.tileSize);
+  canvas->setTileSize(tileSize);
+  canvas->setWidth(state.mapTileSize.x * tileSize);
+  canvas->setHeight(state.mapTileSize.y * tileSize);
   canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
   // Set Tilemap up
   tileMap->clear();
-  tileMap->initialize(state.mapTileSize, state.tileSize);
+  tileMap->initialize(state.mapTileSize, tileSize);
 }
 
 void Editor::placeTile()

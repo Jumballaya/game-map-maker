@@ -13,14 +13,12 @@ enum class TileTool
 struct EditorState
 {
 public:
-  int tileSize;
   int millisPreviousFrame = 0;
 
-  glm::vec2 selectedTileData;
-  glm::vec2 mapTileSize;        // TileSet.sizeTile
-  glm::vec2 imageSize;          // TileSet.sizePixel
-  SDL_Texture *selectedTileset; // TileSet.texture
-  // std::string selectedTileset // Name of selected tile set
+  glm::vec2 mapTileSize; // TileMap.sizeTile
+
+  std::string selectedTileset; // Name of selected tile set
+  glm::vec2 selectedTileData;  // The selected tile (col, row)
 
   TileTool selectedTileTool;
   bool running;
@@ -32,16 +30,14 @@ public:
   bool hoveringCanvas;
   glm::vec2 hoveringCoords;
 
-  Uint32 lastClick = 0;
+  Uint32 lastClick = 0; // For mouse click debounce
 
   EditorState()
   {
-    tileSize = 0;
     millisPreviousFrame = 0;
     selectedTileData = glm::vec2(0, 0);
     mapTileSize = glm::vec2(0, 0);
-    imageSize = glm::vec2(0, 0);
-    selectedTileset = NULL;
+    selectedTileset = "";
     selectedTileTool = TileTool::PlaceTile;
     running = false;
     isDebug = false;

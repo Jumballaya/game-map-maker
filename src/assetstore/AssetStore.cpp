@@ -39,10 +39,10 @@ SDL_Texture *AssetStore::getTexture(const std::string &assetId)
   return textures[assetId];
 }
 
-void AssetStore::addTileset(const std::string &assetId, SDL_Texture *texture, glm::vec2 sizeTile, glm::vec2 sizePixel)
+void AssetStore::addTileset(const std::string &assetId, SDL_Texture *texture, glm::vec2 sizeTile, glm::vec2 sizePixel, int tileSize)
 {
-  TileSet *ts = new TileSet(texture, sizeTile, sizePixel);
-  tilesets.emplace(ts);
+  TileSet *ts = new TileSet(texture, sizeTile, sizePixel, tileSize);
+  tilesets.emplace(assetId, ts);
 }
 
 TileSet *AssetStore::getTileset(const std::string &assetId)

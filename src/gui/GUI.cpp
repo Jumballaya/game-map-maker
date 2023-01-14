@@ -4,7 +4,8 @@
 void EditorGUI::render(
     EditorState state,
     std::unique_ptr<Mouse> &mouse,
-    std::unique_ptr<EventBus> &eventBus)
+    std::unique_ptr<EventBus> &eventBus,
+    std::unique_ptr<AssetStore> &assetStore)
 {
   ImGui::NewFrame();
 
@@ -17,7 +18,7 @@ void EditorGUI::render(
   //////////////
   //  SIDEBAR
   ///////////////////
-  renderSidebar(state, mouse, eventBus);
+  renderSidebar(state, mouse, eventBus, assetStore);
 
   ///////////////
   //  OPEN FILE DIALOG
@@ -53,8 +54,11 @@ void EditorGUI::render(
 void EditorGUI::renderSidebar(
     EditorState state,
     std::unique_ptr<Mouse> &mouse,
-    std::unique_ptr<EventBus> &eventBus)
+    std::unique_ptr<EventBus> &eventBus,
+    std::unique_ptr<AssetStore> &assetStore)
 {
+  auto tileset = assetStore->getTileset(state.selectedTileset);
+  auto texture = tileset->getTexture();
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
   const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
   int sideBarWidth = main_viewport->Size.x * .2;
@@ -65,26 +69,26 @@ void EditorGUI::renderSidebar(
   // START TILE PICKER
   ImGui::Text("Tile Selection", 22);
   ImGui::Separator();
-  ImGui::BeginChild("tiles", ImVec2(sideBarWidth, state.imageSize.y + 30), false, ImGuiWindowFlags_HorizontalScrollbar);
+  ImGui::BeginChild("tiles", ImVec2(sideBarWidth, tileset->sizePixel.y + 30), false, ImGuiWindowFlags_HorizontalScrollbar);
 
   auto scrollY = ImGui::GetScrollY();
   auto scrollX = ImGui::GetScrollX();
 
-  ImGui::Image(state.selectedTileset, ImVec2(state.imageSize.x, state.imageSize.y));
+  ImGui::Image(texture, ImVec2(tileset->sizePixel.x, tileset->sizePixel.y));
 
   int mousePosX = static_cast<int>(ImGui::GetMousePos().x - ImGui::GetWindowPos().x + scrollX);
   int mousePosY = static_cast<int>(ImGui::GetMousePos().y - ImGui::GetWindowPos().y + scrollY);
 
-  int rows = state.imageSize.y / state.tileSize;
-  int cols = state.imageSize.x / state.tileSize;
+  int rows = tileset->sizePixel.y / tileset->tileSize;
+  int cols = tileset->sizePixel.x / tileset->tileSize;
 
   for (int i = 0; i < cols; i++)
   {
     for (int j = 0; j < rows; j++)
     {
       // Check to see if we are in the area of the desired 2D tile
-      bool mouseOverlapsX = mousePosX >= (state.imageSize.x / cols) * i && mousePosX <= (state.imageSize.x / cols) + ((state.imageSize.x / cols) * i);
-      bool mouseOverlapsY = mousePosY >= (state.imageSize.y / rows) * j && mousePosY <= (state.imageSize.y / rows) + ((state.imageSize.y / rows) * j);
+      bool mouseOverlapsX = mousePosX >= (tileset->sizePixel.x / cols) * i && mousePosX <= (tileset->sizePixel.x / cols) + ((tileset->sizePixel.x / cols) * i);
+      bool mouseOverlapsY = mousePosY >= (tileset->sizePixel.y / rows) * j && mousePosY <= (tileset->sizePixel.y / rows) + ((tileset->sizePixel.y / rows) * j);
       if (mouseOverlapsX && mouseOverlapsY)
       {
         if (ImGui::IsItemHovered())
@@ -111,7 +115,8 @@ void EditorGUI::renderSidebar(
   double smallTileSizeY = 1.0 / static_cast<double>(rows);
   double smallX = smallTileSizeX * static_cast<double>(state.selectedTileData.x);
   double smallY = smallTileSizeY * static_cast<double>(state.selectedTileData.y);
-  ImGui::Image(state.selectedTileset, ImVec2(state.tileSize * 2, state.tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
+
+  ImGui::Image(texture, ImVec2(tileset->tileSize * 2, tileset->tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
   ImGui::EndChild();
   // END CURRENT TILE
 
