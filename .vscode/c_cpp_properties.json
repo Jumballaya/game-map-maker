@@ -8,8 +8,14 @@
             "cppStandard": "gnu++17",
             "includePath": [
                 "/usr/include/SDL2/",
+                "/usr/include/",
                 "${workspaceFolder}/libs/"
             ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/libs/"
+                ]
+            },
             "configurationProvider": "ms-vscode.makefile-tools"
         }
     ],

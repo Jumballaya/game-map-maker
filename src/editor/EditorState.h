@@ -15,10 +15,13 @@ struct EditorState
 public:
   int tileSize;
   int millisPreviousFrame = 0;
+
   glm::vec2 selectedTileData;
-  glm::vec2 mapTileSize;
-  glm::vec2 imageSize;
-  SDL_Texture *selectedTileset;
+  glm::vec2 mapTileSize;        // TileSet.sizeTile
+  glm::vec2 imageSize;          // TileSet.sizePixel
+  SDL_Texture *selectedTileset; // TileSet.texture
+  // std::string selectedTileset // Name of selected tile set
+
   TileTool selectedTileTool;
   bool running;
   bool isDebug;

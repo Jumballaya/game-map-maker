@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 #include <SDL2/SDL.h>
-#include "../../libs/sol/sol.hpp"
+#include <sol/sol.hpp>
 
 #include "../gui/GUI.h"
 #include "../eventbus/EventBus.h"

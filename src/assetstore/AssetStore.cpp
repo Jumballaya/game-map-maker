@@ -22,6 +22,7 @@ void AssetStore::clearAssets()
     SDL_DestroyTexture(texture.second);
   }
   textures.clear();
+  tilesets.clear();
 }
 
 void AssetStore::addTexture(SDL_Renderer *renderer, const std::string &assetId, const std::string &filePath)
@@ -36,4 +37,15 @@ void AssetStore::addTexture(SDL_Renderer *renderer, const std::string &assetId, 
 SDL_Texture *AssetStore::getTexture(const std::string &assetId)
 {
   return textures[assetId];
+}
+
+void AssetStore::addTileset(const std::string &assetId, SDL_Texture *texture, glm::vec2 sizeTile, glm::vec2 sizePixel)
+{
+  TileSet *ts = new TileSet(texture, sizeTile, sizePixel);
+  tilesets.emplace(ts);
+}
+
+TileSet *AssetStore::getTileset(const std::string &assetId)
+{
+  return tilesets[assetId];
 }
