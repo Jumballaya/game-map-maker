@@ -1,27 +1,34 @@
-#include "./Tilemap.h"
+#include "./TileMap.h"
 #include <algorithm>
 #include <cmath>
 
-TileMap::TileMap(glm::vec2 mapSize, int tileSize, double zoom = 1.0)
-{
-  initialize(mapSize, tileSize);
-};
+/****
+ *
+ *  Tile Map Layer
+ *
+ */
 
-TileMap::~TileMap()
+TileMapLayer::TileMapLayer(std::string name, int cols, int rows, int tileSize)
+{
+  this->name = name;
+  initialize(cols, rows, tileSize);
+}
+
+TileMapLayer::~TileMapLayer()
 {
   clear();
 }
 
-void TileMap::initialize(glm::vec2 mapSize, int tileSize)
+void TileMapLayer::initialize(int cols, int rows, int tileSize)
 {
-  this->mapWidth = mapSize.x;
-  this->mapHeight = mapSize.y;
+  this->cols = cols;
+  this->rows = rows;
   this->tileSize = tileSize;
-  for (int y = 0; y < mapHeight; y++)
+  for (int y = 0; y < rows; y++)
   {
     std::vector<Tile *> row;
     tiles.push_back(row);
-    for (int x = 0; x < mapWidth; x++)
+    for (int x = 0; x < cols; x++)
     {
       Tile *t = new Tile(x, y, -1, -1);
       tiles[y].push_back(t);
@@ -29,7 +36,7 @@ void TileMap::initialize(glm::vec2 mapSize, int tileSize)
   }
 }
 
-Tile TileMap::getTile(glm::vec2 position) const
+Tile TileMapLayer::getTile(glm::vec2 position) const
 {
   int col = position.x;
   int row = position.y;
@@ -42,7 +49,7 @@ Tile TileMap::getTile(glm::vec2 position) const
   return def;
 };
 
-void TileMap::updateTile(glm::vec2 position, glm::vec2 tileData)
+void TileMapLayer::updateTile(glm::vec2 position, glm::vec2 tileData)
 {
   int col = position.x;
   int row = position.y;
@@ -56,7 +63,7 @@ void TileMap::updateTile(glm::vec2 position, glm::vec2 tileData)
   }
 };
 
-void TileMap::floodFill(glm::vec2 position, glm::vec2 tileData)
+void TileMapLayer::floodFill(glm::vec2 position, glm::vec2 tileData)
 {
   int col = position.x;
   int row = position.y;
@@ -70,8 +77,8 @@ void TileMap::floodFill(glm::vec2 position, glm::vec2 tileData)
 
     for (auto pos : seen)
     {
-      int row = std::floor(pos / mapWidth);
-      int col = pos % mapWidth;
+      int row = std::floor(pos / cols);
+      int col = pos % cols;
       updateTile(glm::vec2(col, row), tileData);
     }
 
@@ -79,7 +86,7 @@ void TileMap::floodFill(glm::vec2 position, glm::vec2 tileData)
   }
 }
 
-void TileMap::_floodFillRecursive(glm::vec2 position, glm::vec2 tileData, glm::vec2 targetValue, std::vector<int> *seen)
+void TileMapLayer::_floodFillRecursive(glm::vec2 position, glm::vec2 tileData, glm::vec2 targetValue, std::vector<int> *seen)
 {
   int col = position.x;
   int row = position.y;
@@ -90,7 +97,7 @@ void TileMap::_floodFillRecursive(glm::vec2 position, glm::vec2 tileData, glm::v
   {
     glm::vec2 currentValue = glm::vec2(tiles[row][col]->srcCol, tiles[row][col]->srcRow);
     bool targetTileSame = currentValue.x == targetValue.x && currentValue.y == targetValue.y;
-    bool haveSeenTile = std::count(seen->begin(), seen->end(), col + (row * mapWidth));
+    bool haveSeenTile = std::count(seen->begin(), seen->end(), col + (row * cols));
 
     if (targetTileSame && !haveSeenTile)
     {
@@ -99,7 +106,7 @@ void TileMap::_floodFillRecursive(glm::vec2 position, glm::vec2 tileData, glm::v
       tiles[row][col]->srcRow = srcRow;
 
       // add to seen vector
-      seen->push_back(col + (row * mapWidth));
+      seen->push_back(col + (row * cols));
 
       // Loop through and fill all connected tiles (to the immediately l/r t/b)
       glm::vec2 left = glm::vec2(position.x - 1, position.y);
@@ -115,11 +122,11 @@ void TileMap::_floodFillRecursive(glm::vec2 position, glm::vec2 tileData, glm::v
   };
 }
 
-void TileMap::clear()
+void TileMapLayer::clear()
 {
-  for (int y = 0; y < mapHeight; y++)
+  for (int y = 0; y < rows; y++)
   {
-    for (int x = 0; x < mapWidth; x++)
+    for (int x = 0; x < cols; x++)
     {
       delete tiles[y][x];
     }
@@ -128,13 +135,10 @@ void TileMap::clear()
   tiles.clear();
 }
 
-void TileMap::draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position)
+void TileMapLayer::render(SDL_Renderer *renderer, SDL_Texture *texture, int xStart, int yStart, double zoom)
 {
-  // Render the map
-  int y = 0;
   int x = 0;
-  int xStart = position.x;
-  int yStart = position.y;
+  int y = 0;
   for (auto row : tiles)
   {
     for (auto col : row)
@@ -160,12 +164,7 @@ void TileMap::draw(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 posit
   }
 }
 
-void TileMap::setZoom(double zoom)
-{
-  this->zoom = zoom;
-}
-
-bool TileMap::inBounds(glm::vec2 position)
+bool TileMapLayer::inBounds(glm::vec2 position)
 {
   bool inRowBounds = position.y >= 0 && position.y < static_cast<int>(tiles.size());
   if (!inRowBounds)
@@ -176,3 +175,141 @@ bool TileMap::inBounds(glm::vec2 position)
   bool inColBounds = position.x >= 0 && position.x < static_cast<int>(tiles[0].size());
   return inRowBounds && inColBounds;
 }
+
+// End Tile Map Layer
+
+/***
+ *
+ *  Tile Map
+ *
+ *
+ */
+TileMap::TileMap(glm::vec2 mapSize, int tileSize, double zoom = 1.0)
+{
+  initialize(mapSize, tileSize);
+};
+
+TileMap::~TileMap()
+{
+  clear();
+}
+
+void TileMap::initialize(glm::vec2 mapSize, int tileSize)
+{
+  clear();
+  this->tileSize = tileSize;
+  cols = mapSize.x;
+  rows = mapSize.y;
+  width = mapSize.x * tileSize;
+  height = mapSize.y * tileSize;
+}
+
+Tile TileMap::getTile(size_t layer, glm::vec2 position) const
+{
+  if (layer < layers.size())
+  {
+    return layers[layer]->getTile(position);
+  }
+  return Tile(-1, -1, -1, -1);
+};
+
+void TileMap::updateTile(size_t layer, glm::vec2 position, glm::vec2 tileData)
+{
+  if (layer < layers.size())
+  {
+    return layers[layer]->updateTile(position, tileData);
+  }
+};
+
+void TileMap::floodFill(size_t layer, glm::vec2 position, glm::vec2 tileData)
+{
+  if (layer < layers.size())
+  {
+    return layers[layer]->floodFill(position, tileData);
+  }
+}
+
+void TileMap::clear()
+{
+  for (auto layer : layers)
+  {
+    layer->clear();
+  }
+}
+
+void TileMap::render(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position)
+{
+  int xStart = position.x;
+  int yStart = position.y;
+  for (auto layer : layers)
+  {
+    layer->render(renderer, texture, xStart, yStart, zoom);
+  }
+}
+
+void TileMap::setZoom(double zoom)
+{
+  this->zoom = zoom;
+}
+
+int TileMap::createLayer(std::string name)
+{
+  TileMapLayer *layer = new TileMapLayer(name, cols, rows, tileSize);
+  layers.push_back(layer);
+  return layers.size() - 1;
+};
+
+void TileMap::renameLayer(size_t layerId, std::string name)
+{
+  if (layerId >= 0 && layerId < layers.size())
+  {
+    layers[layerId]->name = name;
+  }
+};
+
+void TileMap::deleteLayer(size_t layerId)
+{
+  if (layerId < 0 || layerId > layers.size() - 1)
+  {
+    return;
+  }
+
+  // Delete last layer
+  if (layerId == layers.size() - 1)
+  {
+    auto last = layers[layerId];
+    last->clear();
+    layers.pop_back();
+    delete last;
+    return;
+  }
+
+  // Any other layer
+  auto layerToDelete = layers[layerId];
+  layerToDelete->clear();
+  for (size_t i = layerId; i < layers.size() - 1; i++)
+  {
+    layers[i] = layers[i + 1];
+  }
+  layers.pop_back();
+};
+
+void TileMap::moveLayer(size_t layerId, size_t layerIdToMoveTo)
+{
+  if (layerId < 0 || layerId > layers.size() - 1)
+  {
+    return;
+  }
+  if (layerIdToMoveTo < 0 || layerIdToMoveTo > layers.size() - 1)
+  {
+    return;
+  }
+
+  auto layerToMove = layers[layerId];
+  for (size_t i = layerId; i < layerIdToMoveTo; i++)
+  {
+    layers[i] = layers[i + 1];
+  }
+  layers[layerIdToMoveTo] = layerToMove;
+  return;
+};

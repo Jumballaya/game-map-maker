@@ -12,7 +12,7 @@
 #include "Canvas.h"
 #include "./EditorState.h"
 #include "../mouse/Mouse.h"
-#include "../tilemap/Tilemap.h"
+#include "../tilemap/TileMap.h"
 #include "../commands/CommandManager.h"
 
 #include "../events/Events.h"

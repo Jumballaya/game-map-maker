@@ -6,7 +6,7 @@
 #include "./commands/CommandManager.h"
 #include "./commands/TestCommand.h"
 
-#include "./tilemap/Tilemap.h"
+#include "./tilemap/TileMap.h"
 
 #include "./editor/Editor.h"
 #include "./logger/Logger.h"

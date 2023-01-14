@@ -195,6 +195,11 @@ void Editor::processInput()
       case SDLK_y:
         commandManager->redo();
         break;
+
+      // TEMP
+      case SDLK_q:
+        state.selectedLayer = (state.selectedLayer + 1) % tileMap->layerCount();
+        break;
       }
       break;
 
@@ -313,7 +318,7 @@ void Editor::render()
   // Canvas
   canvas->draw(renderer);
   SDL_Texture *texture = assetStore->getTileset(state.selectedTileset)->getTexture();
-  tileMap->draw(renderer, texture, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
+  tileMap->render(renderer, texture, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
 
   // Render tile to place at the mouse cursor
   // Only render if hovering over the canvas
@@ -356,8 +361,9 @@ void Editor::loadMap(std::string filePath)
   canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
   // Set Tilemap up
-  tileMap->clear();
   tileMap->initialize(state.mapTileSize, tileSize);
+  tileMap->createLayer("layer1");
+  tileMap->createLayer("layer2");
 }
 
 void Editor::placeTile()
@@ -368,10 +374,10 @@ void Editor::placeTile()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    Tile t = tileMap->getTile(tileCoords);
+    Tile t = tileMap->getTile(state.selectedLayer, tileCoords);
     if (!(t.srcRow == state.selectedTileData.y && t.srcCol == state.selectedTileData.x))
     {
-      commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, state.selectedTileData);
+      commandManager->execute<PlaceTileCommand>(tileMap, state.selectedLayer, tileCoords, state.selectedTileData);
     }
   }
 }
@@ -384,10 +390,10 @@ void Editor::eraseTile()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    Tile t = tileMap->getTile(tileCoords);
+    Tile t = tileMap->getTile(state.selectedLayer, tileCoords);
     if (!(t.srcRow == -1 && t.srcCol == -1))
     {
-      commandManager->execute<PlaceTileCommand>(tileMap, tileCoords, glm::vec2(-1, -1));
+      commandManager->execute<PlaceTileCommand>(tileMap, state.selectedLayer, tileCoords, glm::vec2(-1, -1));
     }
   }
 }
@@ -400,7 +406,7 @@ void Editor::floodFill()
   // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    tileMap->floodFill(tileCoords, state.selectedTileData);
+    tileMap->floodFill(state.selectedLayer, tileCoords, state.selectedTileData);
   }
 }
 

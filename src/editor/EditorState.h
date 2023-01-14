@@ -19,6 +19,7 @@ public:
 
   std::string selectedTileset; // Name of selected tile set
   glm::vec2 selectedTileData;  // The selected tile (col, row)
+  size_t selectedLayer;        // The layerId of currently selected layer
 
   TileTool selectedTileTool;
   bool running;
@@ -36,6 +37,7 @@ public:
   {
     millisPreviousFrame = 0;
     selectedTileData = glm::vec2(0, 0);
+    selectedLayer = 0;
     mapTileSize = glm::vec2(0, 0);
     selectedTileset = "";
     selectedTileTool = TileTool::PlaceTile;
