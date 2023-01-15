@@ -53,13 +53,12 @@ Progress pic to mark this day
   - ~~UI update for layers panel~~
   - ~~Currently selected layer~~
   - ~~Tile tool on a layer~~
-- Add pugixml and XML map file format
+- ~~Add pugixml and XML map file format~~
   - ~~Add pugixml~~
   - ~~Create file format~~
   - ~~Read file and turn it into a TileMap~~
-  - Document the file format
+  - ~~Document the file format~~
   - ~~Save TileMap into an XML file~~
-
   - Update Game Engine to read/parse map files
     - Add pugixml and map file format docs to Game Engine
     - Implement open and parse map file in Game Engine

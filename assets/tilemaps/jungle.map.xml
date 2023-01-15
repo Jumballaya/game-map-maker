@@ -4,7 +4,7 @@
     <tileset name="jungle" source="./assets/tilemaps/tileset_jungle.png" tileSize="16" columns="4" rows="4" width="64" height="64" />
   </tilesets>
   <layers>
-    <layer id="0" name="Ground" width="40" height="30" tileset="jungle">
+    <layer name="Ground" width="40" height="30" tileset="jungle">
       <tiledata>
 9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,8,8,8,8,8,8,8,8,8,8,8,8,8,9,0,7,8,8,8,8,8,
 9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,8,8,8,8,8,8,8,8,8,8,8,8,8,9,1,7,8,8,8,8,8,
