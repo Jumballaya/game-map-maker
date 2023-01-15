@@ -5,7 +5,8 @@ void EditorGUI::render(
     EditorState state,
     std::unique_ptr<Mouse> &mouse,
     std::unique_ptr<EventBus> &eventBus,
-    std::unique_ptr<AssetStore> &assetStore)
+    std::unique_ptr<AssetStore> &assetStore,
+    std::shared_ptr<TileMap> &tileMap)
 {
   ImGui::NewFrame();
 
@@ -18,7 +19,7 @@ void EditorGUI::render(
   //////////////
   //  SIDEBAR
   ///////////////////
-  renderSidebar(state, mouse, eventBus, assetStore);
+  renderSidebar(state, mouse, eventBus, assetStore, tileMap);
 
   ///////////////
   //  OPEN FILE DIALOG
@@ -55,7 +56,8 @@ void EditorGUI::renderSidebar(
     EditorState state,
     std::unique_ptr<Mouse> &mouse,
     std::unique_ptr<EventBus> &eventBus,
-    std::unique_ptr<AssetStore> &assetStore)
+    std::unique_ptr<AssetStore> &assetStore,
+    std::shared_ptr<TileMap> &tileMap)
 {
   auto tileset = assetStore->getTileset(state.selectedTileset);
   auto texture = tileset->getTexture();
@@ -124,28 +126,48 @@ void EditorGUI::renderSidebar(
   if (ImGui::BeginTable("layers-table", 1, tableFlags))
   {
     ImGui::TableSetupColumn("Layer Name");
-
-    static const char *names[] = {"Layer 1", "Layer 2", "Layer 3", "Layer 4", "Layer 5"};
-    static int selected = -1;
-    for (int row = 0; row < IM_ARRAYSIZE(names); row++)
+    size_t count = tileMap->layerCount();
+    for (size_t row = 0; row < count; row++)
     {
       ImGui::TableNextRow();
-      const char *item = names[row];
-      for (int col = 0; col < 1; col++)
+      const std::string &item = tileMap->getLayerName(row);
+      for (size_t col = 0; col < 1; col++)
       {
         ImGui::TableSetColumnIndex(col);
-        if (ImGui::Selectable(item, row == selected))
+        if (ImGui::Selectable(item.c_str(), row == state.selectedLayer))
         {
-          selected = row;
+          eventBus->emit<TileMapLayerSelectEvent>(row);
         };
+        if (ImGui::BeginPopupContextItem())
+        {
+          ImGui::Text("Rename layer \"%s\"", tileMap->getLayerName(row).c_str());
+          ImGui::Separator();
+          static char newName[256];
+          ImGui::InputText("rename layer", newName, IM_ARRAYSIZE(newName));
+          ImGui::Separator();
+          if (ImGui::Button("Rename"))
+          {
+            eventBus->emit<TileMapLayerNameChangeEvent>(row, std::string(newName));
+            ImGui::CloseCurrentPopup();
+          }
+          ImGui::SameLine();
+          if (ImGui::Button("Cancel"))
+          {
+            ImGui::CloseCurrentPopup();
+          }
+          ImGui::EndPopup();
+        }
+        if (ImGui::IsItemHovered())
+        {
+          ImGui::SetTooltip("Right-click to rename layer");
+        }
         if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
         {
-          int nextRow = row + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
-          if (nextRow >= 0 && nextRow < IM_ARRAYSIZE(names))
+          size_t nextRow = row + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+          if (nextRow >= 0 && nextRow < count)
           {
-            selected = nextRow;
-            names[row] = names[nextRow];
-            names[nextRow] = item;
+            eventBus->emit<TileMapLayerSelectEvent>(nextRow);
+            tileMap->swapLayers(nextRow, row);
             ImGui::ResetMouseDragDelta();
           }
         }
@@ -153,6 +175,19 @@ void EditorGUI::renderSidebar(
     }
     ImGui::EndTable();
   }
+
+  // Add Layer
+  static char layerName[128];
+  ImGui::InputText("Add Layer", layerName, IM_ARRAYSIZE(layerName));
+  ImGui::SameLine();
+
+  if (ImGui::Button("Create Layer"))
+  {
+    tileMap->createLayer(std::string(layerName), state.selectedTileset);
+  }
+
+  // End Add Layer
+
   // END LAYERS
 
   ImGui::ShowDemoWindow();

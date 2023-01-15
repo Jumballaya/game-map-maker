@@ -95,6 +95,8 @@ void Editor::setup()
   eventBus->subscribe<TileSelectEvent>(this, &Editor::onTileSelect);
   eventBus->subscribe<RunLUAEvent>(this, &Editor::onRunLua);
   eventBus->subscribe<TileToolSelectEvent>(this, &Editor::onTileToolSelect);
+  eventBus->subscribe<TileMapLayerSelectEvent>(this, &Editor::onTileMapLayerSelectEvent);
+  eventBus->subscribe<TileMapLayerNameChangeEvent>(this, &Editor::onTileMapLayerNameChange);
 
   loadMap("__init__");
 
@@ -218,7 +220,8 @@ void Editor::processInput()
       // It ended up being much easier than always passing
       // zoom into the canvas/tilemap methods
       // Maybe this means that mouse should be holding the
-      // zoom value at all?
+      // zoom value at all? Or maybe it should be a singleton
+      // with static methods for getting pos, zoom ,etc
       canvas->setZoom(mouse->getZoom());
       tileMap->setZoom(mouse->getZoom());
       break;
@@ -328,7 +331,7 @@ void Editor::render()
   }
 
   // GUI
-  gui->render(state, mouse, eventBus, assetStore);
+  gui->render(state, mouse, eventBus, assetStore, tileMap);
 
   SDL_RenderPresent(renderer);
 }
@@ -367,10 +370,7 @@ void Editor::placeTile()
 
 void Editor::eraseTile()
 {
-  // 1. Get tile location from canvas
   glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
-
-  // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
     Tile t = tileMap->getTile(state.selectedLayer, tileCoords);
@@ -383,10 +383,7 @@ void Editor::eraseTile()
 
 void Editor::floodFill()
 {
-  // 1. Get tile location from canvas
   glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
-
-  // 2. Insert the currently selected tile (col/row) into the tilemap
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
     tileMap->floodFill(state.selectedLayer, tileCoords, state.selectedTileData);
@@ -406,6 +403,16 @@ void Editor::onTileSelect(TileSelectEvent &event)
 {
   state.selectedTileData.x = event.col;
   state.selectedTileData.y = event.row;
+};
+
+void Editor::onTileMapLayerSelectEvent(TileMapLayerSelectEvent &event)
+{
+  state.selectedLayer = event.layerId;
+};
+
+void Editor::onTileMapLayerNameChange(TileMapLayerNameChangeEvent &event)
+{
+  tileMap->renameLayer(event.layerId, event.newName);
 };
 
 void Editor::onRunLua(RunLUAEvent &event)

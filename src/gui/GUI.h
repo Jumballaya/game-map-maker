@@ -12,6 +12,7 @@
 #include "../mouse/Mouse.h"
 #include "../eventbus/EventBus.h"
 #include "../editor/EditorState.h"
+#include "../tilemap/TileMap.h"
 
 class EditorGUI
 {
@@ -22,13 +23,15 @@ public:
       EditorState state,
       std::unique_ptr<Mouse> &mouse,
       std::unique_ptr<EventBus> &eventBus,
-      std::unique_ptr<AssetStore> &assetStore);
+      std::unique_ptr<AssetStore> &assetStore,
+      std::shared_ptr<TileMap> &tileMap);
 
   void renderSidebar(
       EditorState state,
       std::unique_ptr<Mouse> &mouse,
       std::unique_ptr<EventBus> &eventBus,
-      std::unique_ptr<AssetStore> &assetStore);
+      std::unique_ptr<AssetStore> &assetStore,
+      std::shared_ptr<TileMap> &tileMaps);
 
   void renderMainMenuBar(std::unique_ptr<EventBus> &eventBus);
 

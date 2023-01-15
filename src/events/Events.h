@@ -5,5 +5,7 @@
 #include "./TileSelectEvent.h"
 #include "./RunLuaEvent.h"
 #include "./TileToolSelectEvent.h"
+#include "./TileMapLayerSelectEvent.h"
+#include "./TileMapLayerNameChangeEvent.h"
 
 #endif

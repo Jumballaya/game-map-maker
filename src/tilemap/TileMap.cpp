@@ -327,3 +327,28 @@ void TileMap::moveLayer(size_t layerId, size_t layerIdToMoveTo)
   layers[layerIdToMoveTo] = layerToMove;
   return;
 };
+
+const std::string &TileMap::getLayerName(size_t layerId) const
+{
+  if (layerId < layers.size())
+  {
+    return layers[layerId]->name;
+  }
+  return NULL;
+};
+
+void TileMap::swapLayers(size_t layer1, size_t layer2)
+{
+  if (layer1 < 0 || layer1 > layers.size() - 1)
+  {
+    return;
+  }
+  if (layer2 < 0 || layer2 > layers.size() - 1)
+  {
+    return;
+  }
+  auto temp1 = layers[layer1];
+  auto temp2 = layers[layer2];
+  layers[layer2] = temp1;
+  layers[layer1] = temp2;
+};
