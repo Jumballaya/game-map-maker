@@ -100,7 +100,6 @@ public:
                         srcCol = index % static_cast<int>(tileSet->sizeTile.x);
                         srcRow = static_cast<int>(std::floor(index / tileSet->sizeTile.x));
                     }
-                    Logger::Log("(" + std::to_string(srcCol) + ", " + std::to_string(srcRow) + ")");
                     tileMap.get()->updateTile(layerId, glm::vec2(x, y), glm::vec2(srcCol, srcRow));
                     i++;
                 }

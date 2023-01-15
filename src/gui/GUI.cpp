@@ -104,12 +104,10 @@ void EditorGUI::renderSidebar(
   }
 
   ImGui::EndChild();
-
   // END TILE PICKER
 
   // START CURRENT TILE
   ImGui::Separator();
-  ImGui::BeginChild("Selected Tile");
   ImGui::Text("Currently Selected Tile", 22);
   double smallTileSizeX = 1.0 / static_cast<double>(cols);
   double smallTileSizeY = 1.0 / static_cast<double>(rows);
@@ -117,8 +115,45 @@ void EditorGUI::renderSidebar(
   double smallY = smallTileSizeY * static_cast<double>(state.selectedTileData.y);
 
   ImGui::Image(texture, ImVec2(tileset->tileSize * 2, tileset->tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
-  ImGui::EndChild();
   // END CURRENT TILE
+
+  // START LAYERS
+  ImGui::Separator();
+  ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Reorderable;
+  ImGui::Text("Tile Map Layers", 22);
+  if (ImGui::BeginTable("layers-table", 1, tableFlags))
+  {
+    ImGui::TableSetupColumn("Layer Name");
+
+    static const char *names[] = {"Layer 1", "Layer 2", "Layer 3", "Layer 4", "Layer 5"};
+    static int selected = -1;
+    for (int row = 0; row < IM_ARRAYSIZE(names); row++)
+    {
+      ImGui::TableNextRow();
+      const char *item = names[row];
+      for (int col = 0; col < 1; col++)
+      {
+        ImGui::TableSetColumnIndex(col);
+        if (ImGui::Selectable(item, row == selected))
+        {
+          selected = row;
+        };
+        if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
+        {
+          int nextRow = row + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+          if (nextRow >= 0 && nextRow < IM_ARRAYSIZE(names))
+          {
+            selected = nextRow;
+            names[row] = names[nextRow];
+            names[nextRow] = item;
+            ImGui::ResetMouseDragDelta();
+          }
+        }
+      }
+    }
+    ImGui::EndTable();
+  }
+  // END LAYERS
 
   ImGui::ShowDemoWindow();
 
