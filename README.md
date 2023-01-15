@@ -69,6 +69,10 @@ Progress pic to mark this day
   - Blank TileMap initialization
   - UI Dialog box
 
+- Add more ways to interact with the layers
+  - Layer visible/hidden
+  - Layer locked/unlocked
+
 - Refactor tool dropdown to be a menu bar
   - Add Icon support
 
