@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<map width="40" height="40" tilewidth="16" tileheight="16">
+<map width="40" height="30" tileSize="16">
   <tilesets>
-    <tileset name="jungle" source="./tileset_jungle.png" tilewidth="16" tileheight="16" columns="4" rows="4" width="64" height="64" />
+    <tileset name="jungle" source="./assets/tilemaps/tileset_jungle.png" tileSize="16" columns="4" rows="4" width="64" height="64" />
   </tilesets>
-  <layer id="0" name="Ground" width="40" height="40">
-    <tiledata tileset="jungle">
+  <layers>
+    <layer id="0" name="Ground" width="40" height="30" tileset="jungle">
+      <tiledata>
 9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,8,8,8,8,8,8,8,8,8,8,8,8,8,9,0,7,8,8,8,8,8,
 9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,8,8,8,8,8,8,8,8,8,8,8,8,8,9,1,7,8,8,8,8,8,
 9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,8,8,8,8,8,8,8,8,8,8,8,8,8,9,1,7,8,8,8,8,8,
@@ -35,6 +36,7 @@
 8,10,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,11,8,
 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
-    </tiledata>
-  </layer>
+      </tiledata>
+    </layer>
+  </layers>
 </map>

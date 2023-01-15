@@ -13,6 +13,7 @@ This game engine was created with the goal of further learning about game engine
 - lua `5.3`
 - glm `0.9.9`
 - dear imgui `1.83`
+- pugixml `1.13`
 
 ## Progress Log
 
@@ -44,11 +45,13 @@ Progress pic to mark this day
     - ~~Will eventually have messages for 'placed tile, ctrl+z to undo' type messages~~
 - Add Multi-layer support
   - UI update for layers panel
-  - Currently selected layer
-  - Tile tool on a layer
+  - ~~Currently selected layer~~
+  - ~~Tile tool on a layer~~
 - Add pugixml and XML map file format
+  - ~~Add pugixml~~
+  - ~~Create file format~~
+  - ~~Read file and turn it into a TileMap~~
   - Document the file format
-  - Read file and turn it into a TileMap
   - Save TileMap into an XML file
 
   - Update Game Engine to read/parse map files

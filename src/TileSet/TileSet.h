@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include <glm/glm.hpp>
+#include "../../libs/glm/glm.hpp"
 #include <SDL2/SDL.h>
 
 class TileSet

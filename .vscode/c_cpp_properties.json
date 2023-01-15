@@ -9,7 +9,7 @@
             "includePath": [
                 "/usr/include/SDL2/",
                 "/usr/include/",
-                "${workspaceFolder}/libs/"
+                "${workspaceFolder}/libs/",
             ],
             "browse": {
                 "path": [

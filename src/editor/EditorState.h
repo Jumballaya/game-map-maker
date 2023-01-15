@@ -15,7 +15,7 @@ struct EditorState
 public:
   int millisPreviousFrame = 0;
 
-  glm::vec2 mapTileSize; // TileMap.sizeTile
+  // glm::vec2 mapTileSize; // TileMap.sizeTile
 
   std::string selectedTileset; // Name of selected tile set
   glm::vec2 selectedTileData;  // The selected tile (col, row)
@@ -38,7 +38,6 @@ public:
     millisPreviousFrame = 0;
     selectedTileData = glm::vec2(0, 0);
     selectedLayer = 0;
-    mapTileSize = glm::vec2(0, 0);
     selectedTileset = "";
     selectedTileTool = TileTool::PlaceTile;
     running = false;

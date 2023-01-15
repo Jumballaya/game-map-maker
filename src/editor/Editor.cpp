@@ -7,6 +7,7 @@
 
 #include "Editor.h"
 #include "../logger/Logger.h"
+#include "../tilemap/TileMapLoader.h"
 
 int Editor::windowWidth;
 int Editor::windowHeight;
@@ -317,8 +318,7 @@ void Editor::render()
 
   // Canvas
   canvas->draw(renderer);
-  SDL_Texture *texture = assetStore->getTileset(state.selectedTileset)->getTexture();
-  tileMap->render(renderer, texture, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
+  tileMap->render(renderer, assetStore, glm::vec2(canvas->getXPosition(), canvas->getYPosition()));
 
   // Render tile to place at the mouse cursor
   // Only render if hovering over the canvas
@@ -335,35 +335,18 @@ void Editor::render()
 
 void Editor::loadMap(std::string filePath)
 {
-  // Parse map file
-  // 1. Parse and create tilesets
-  // 2. Parse and create layers
-
-  // Set values from file
-
-  // @TODO -- Move most of this data into a TileSet class
-  state.selectedTileset = "tilemap";
-  state.mapTileSize.x = 32;
-  state.mapTileSize.y = 32;
-  state.selectedTileData.x = 0;
-  state.selectedTileData.y = 0;
-  int tileSize = 16;
-  glm::vec2 tilesetSizeTile(12 * tileSize, 10 * tileSize);
-  SDL_Surface *surface = IMG_Load("./assets/tiles_packed.png");
-  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-  SDL_FreeSurface(surface);
-  assetStore->addTileset("tilemap", texture, glm::vec2(12, 10), tilesetSizeTile, 16);
+  // Set Tilemap up
+  tileMap = TileMapLoader::loadTileMap("./assets/tilemaps/jungle.map.xml", assetStore, renderer);
 
   // Set Canvas up
-  canvas->setTileSize(tileSize);
-  canvas->setWidth(state.mapTileSize.x * tileSize);
-  canvas->setHeight(state.mapTileSize.y * tileSize);
+  canvas->setTileSize(tileMap->tileSize);
+  canvas->setWidth(tileMap->width);
+  canvas->setHeight(tileMap->height);
   canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
-  // Set Tilemap up
-  tileMap->initialize(state.mapTileSize, tileSize);
-  tileMap->createLayer("layer1");
-  tileMap->createLayer("layer2");
+  state.selectedTileset = tileMap->tilesets[0];
+  state.selectedTileData.x = 0;
+  state.selectedTileData.y = 0;
 }
 
 void Editor::placeTile()

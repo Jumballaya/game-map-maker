@@ -1,6 +1,13 @@
-#include "./TileMap.h"
 #include <algorithm>
 #include <cmath>
+
+#include "./TileMap.h"
+#include "../assetstore/AssetStore.h"
+
+int create_index(int x, int y, int cols)
+{
+  return (y * cols) + x;
+}
 
 /****
  *
@@ -8,9 +15,10 @@
  *
  */
 
-TileMapLayer::TileMapLayer(std::string name, int cols, int rows, int tileSize)
+TileMapLayer::TileMapLayer(std::string name, std::string tileset, int cols, int rows, int tileSize)
 {
   this->name = name;
+  this->tileset = tileset;
   initialize(cols, rows, tileSize);
 }
 
@@ -30,7 +38,7 @@ void TileMapLayer::initialize(int cols, int rows, int tileSize)
     tiles.push_back(row);
     for (int x = 0; x < cols; x++)
     {
-      Tile *t = new Tile(x, y, -1, -1);
+      Tile *t = new Tile(x, y, -1, -1, -1);
       tiles[y].push_back(t);
     }
   }
@@ -45,7 +53,7 @@ Tile TileMapLayer::getTile(glm::vec2 position) const
   {
     return *tiles[row][col];
   }
-  Tile def(-1, -1, -1, -1);
+  Tile def(-1, -1, -1, -1, -1);
   return def;
 };
 
@@ -55,11 +63,17 @@ void TileMapLayer::updateTile(glm::vec2 position, glm::vec2 tileData)
   int row = position.y;
   int srcCol = tileData.x;
   int srcRow = tileData.y;
+  int index = create_index(tileData.x, tileData.y, cols);
+  if (srcCol == -1 && srcRow == -1)
+  {
+    index = -1;
+  }
 
   if (inBounds(position))
   {
     tiles[row][col]->srcCol = srcCol;
     tiles[row][col]->srcRow = srcRow;
+    tiles[row][col]->index = index;
   }
 };
 
@@ -210,7 +224,7 @@ Tile TileMap::getTile(size_t layer, glm::vec2 position) const
   {
     return layers[layer]->getTile(position);
   }
-  return Tile(-1, -1, -1, -1);
+  return Tile(-1, -1, -1, -1, -1);
 };
 
 void TileMap::updateTile(size_t layer, glm::vec2 position, glm::vec2 tileData)
@@ -237,13 +251,13 @@ void TileMap::clear()
   }
 }
 
-void TileMap::render(SDL_Renderer *renderer, SDL_Texture *texture, glm::vec2 position)
+void TileMap::render(SDL_Renderer *renderer, std::unique_ptr<AssetStore> &assetStore, glm::vec2 position)
 {
   int xStart = position.x;
   int yStart = position.y;
   for (auto layer : layers)
   {
-    layer->render(renderer, texture, xStart, yStart, zoom);
+    layer->render(renderer, assetStore->getTileset(layer->tileset)->getTexture(), xStart, yStart, zoom);
   }
 }
 
@@ -252,14 +266,14 @@ void TileMap::setZoom(double zoom)
   this->zoom = zoom;
 }
 
-int TileMap::createLayer(std::string name)
+size_t TileMap::createLayer(const std::string &name, const std::string &tileset)
 {
-  TileMapLayer *layer = new TileMapLayer(name, cols, rows, tileSize);
+  TileMapLayer *layer = new TileMapLayer(name, tileset, cols, rows, tileSize);
   layers.push_back(layer);
   return layers.size() - 1;
 };
 
-void TileMap::renameLayer(size_t layerId, std::string name)
+void TileMap::renameLayer(size_t layerId, const std::string &name)
 {
   if (layerId >= 0 && layerId < layers.size())
   {
