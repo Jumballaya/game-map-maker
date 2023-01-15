@@ -17,6 +17,12 @@ This game engine was created with the goal of further learning about game engine
 
 ## Progress Log
 
+### Jan. 15, 2023
+
+I added the basic Layers panel under the tileset on the right-side panel.
+
+![Second Progress Pic](/screenshots/progress-2023-01-15.png)
+
 ### Jan. 10, 2023
 
 Basically just started on the the tile editor part of this long journey.
@@ -43,8 +49,8 @@ Progress pic to mark this day
 - ~~Add Mouse coords when over the canvas (both tile and pixel coords)~~
   - ~~Message bar at the bottom for coords~~
     - ~~Will eventually have messages for 'placed tile, ctrl+z to undo' type messages~~
-- Add Multi-layer support
-  - UI update for layers panel
+- ~~Add Multi-layer support~~
+  - ~~UI update for layers panel~~
   - ~~Currently selected layer~~
   - ~~Tile tool on a layer~~
 - Add pugixml and XML map file format
@@ -52,7 +58,7 @@ Progress pic to mark this day
   - ~~Create file format~~
   - ~~Read file and turn it into a TileMap~~
   - Document the file format
-  - Save TileMap into an XML file
+  - ~~Save TileMap into an XML file~~
 
   - Update Game Engine to read/parse map files
     - Add pugixml and map file format docs to Game Engine
