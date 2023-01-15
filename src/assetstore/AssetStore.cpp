@@ -49,3 +49,14 @@ TileSet *AssetStore::getTileset(const std::string &assetId)
 {
   return tilesets[assetId];
 }
+
+std::vector<std::string> AssetStore::getTilesetNames()
+{
+  std::vector<std::string> keys;
+  for (std::map<std::string, TileSet *>::iterator it = tilesets.begin(); it != tilesets.end(); ++it)
+  {
+    keys.push_back(it->first);
+  }
+
+  return keys;
+}

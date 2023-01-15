@@ -59,9 +59,6 @@ Progress pic to mark this day
   - ~~Read file and turn it into a TileMap~~
   - ~~Document the file format~~
   - ~~Save TileMap into an XML file~~
-  - Update Game Engine to read/parse map files
-    - Add pugixml and map file format docs to Game Engine
-    - Implement open and parse map file in Game Engine
 
 - Add open/save
   - UI Dialog boxes to hook into previous work
@@ -107,6 +104,10 @@ Progress pic to mark this day
       - The engine -- The core system that actually runs the game (ecs/game events/scripting/etc.)
       - The game   -- Creates the SDL stuff, passes it to the engine, loads up the engines' assets/entities/etc. from file then
                     starts it in the window. It would be nice if this was bundled by the editor with the assets inside the binary
+
+  - Update Game Engine to read/parse map files
+    - Add pugixml and map file format docs to Game Engine
+    - Implement open and parse map file in Game Engine
 
   - Generate Game lua file
     - For the game: Basic game lua file pointing to the single 'level' aka the active tilemap

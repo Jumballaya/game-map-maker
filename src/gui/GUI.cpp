@@ -14,7 +14,7 @@ void EditorGUI::render(
   //  MAIN MENU BAR
   /////////////////////
   static bool openMapModal = false; // check against EditorState
-  renderMainMenuBar(eventBus);
+  renderMainMenuBar(eventBus, &openMapModal);
 
   //////////////
   //  SIDEBAR
@@ -26,7 +26,7 @@ void EditorGUI::render(
   //////////////
   if (openMapModal)
   {
-    renderOpenMapModal(eventBus);
+    renderOpenMapModal(eventBus, &openMapModal);
   }
 
   //////////////////
@@ -60,7 +60,16 @@ void EditorGUI::renderSidebar(
     std::shared_ptr<TileMap> &tileMap)
 {
   auto tileset = assetStore->getTileset(state.selectedTileset);
+  if (tileset == NULL)
+  {
+    return;
+  }
   auto texture = tileset->getTexture();
+  if (texture == NULL)
+  {
+    return;
+  }
+
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
   const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
   int sideBarWidth = main_viewport->Size.x * .2;
@@ -119,6 +128,27 @@ void EditorGUI::renderSidebar(
   ImGui::Image(texture, ImVec2(tileset->tileSize * 2, tileset->tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
   // END CURRENT TILE
 
+  // START TILESET PICKER
+  auto tilesetList = assetStore->getTilesetNames();
+  if (ImGui::BeginCombo("Tilesets", state.selectedTileset.c_str()))
+  {
+    for (size_t n = 0; n < tilesetList.size(); n++)
+    {
+      const bool isSelected = tilesetList[n].compare(state.selectedTileset) == 0;
+      if (ImGui::Selectable(tilesetList[n].c_str(), isSelected))
+      {
+        eventBus->emit<TileSetSelectEvent>(tilesetList[n]);
+      }
+      if (isSelected)
+      {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+    ImGui::EndCombo();
+  }
+
+  // END TILESET PICKER
+
   // START LAYERS
   ImGui::Separator();
   ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Reorderable;
@@ -142,17 +172,25 @@ void EditorGUI::renderSidebar(
         {
           ImGui::Text("Rename layer \"%s\"", tileMap->getLayerName(row).c_str());
           ImGui::Separator();
-          static char newName[256];
+          static char newName[32];
           ImGui::InputText("rename layer", newName, IM_ARRAYSIZE(newName));
           ImGui::Separator();
           if (ImGui::Button("Rename"))
           {
             eventBus->emit<TileMapLayerNameChangeEvent>(row, std::string(newName));
+            for (int i = 0; i < IM_ARRAYSIZE(newName); i++)
+            {
+              newName[i] = '\0';
+            }
             ImGui::CloseCurrentPopup();
           }
           ImGui::SameLine();
           if (ImGui::Button("Cancel"))
           {
+            for (int i = 0; i < IM_ARRAYSIZE(newName); i++)
+            {
+              newName[i] = '\0';
+            }
             ImGui::CloseCurrentPopup();
           }
           ImGui::EndPopup();
@@ -211,7 +249,7 @@ void EditorGUI::renderScriptBox(std::unique_ptr<EventBus> &eventBus)
   ImGui::EndChild();
 }
 
-void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus)
+void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus, bool *openMapModal)
 {
   if (ImGui::BeginMainMenuBar())
   {
@@ -219,8 +257,7 @@ void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus)
     {
       if (ImGui::MenuItem("Open Map"))
       {
-        // @TODO: Use events and set the state on the EditorState struct
-        // openMapModal = true;
+        *openMapModal = true;
       }
       if (ImGui::MenuItem("Save Map"))
       {
@@ -254,13 +291,13 @@ void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus)
   }
 }
 
-void EditorGUI::renderOpenMapModal(std::unique_ptr<EventBus> &eventBus)
+void EditorGUI::renderOpenMapModal(std::unique_ptr<EventBus> &eventBus, bool *openMapModal)
 {
   ImGui::OpenPopup("Open Map File");
   ImVec2 center = ImGui::GetMainViewport()->GetCenter();
   ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-  if (ImGui::BeginPopupModal("Open Map File", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+  if (ImGui::BeginPopupModal("Open Map File", openMapModal, ImGuiWindowFlags_AlwaysAutoResize))
   {
     ImGui::Text("Type in the map file's location below\nThen hit the button marked 'open' to start editing");
     ImGui::Separator();
@@ -271,9 +308,8 @@ void EditorGUI::renderOpenMapModal(std::unique_ptr<EventBus> &eventBus)
     ImGui::Separator();
     if (ImGui::Button("Open", ImVec2(120, 0)))
     {
+      eventBus->emit<OpenTileMapEvent>(std::string(buf));
       ImGui::CloseCurrentPopup();
-      // OPEN_MAP_EVENT
-      // loadMap(std::string(buf));
     }
     ImGui::SetItemDefaultFocus();
     ImGui::SameLine();

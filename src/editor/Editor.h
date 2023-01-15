@@ -51,8 +51,10 @@ public:
   void onTileSelect(TileSelectEvent &event);
   void onTileToolSelect(TileToolSelectEvent &event);
   void onRunLua(RunLUAEvent &event);
-  void onTileMapLayerSelectEvent(TileMapLayerSelectEvent &event);
+  void onTileMapLayerSelect(TileMapLayerSelectEvent &event);
   void onTileMapLayerNameChange(TileMapLayerNameChangeEvent &event);
+  void onTileSetSelect(TileSetSelectEvent &event);
+  void onOpenTileMap(OpenTileMapEvent &event);
 
   // Editor
   static int windowWidth;

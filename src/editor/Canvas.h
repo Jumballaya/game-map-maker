@@ -89,6 +89,11 @@ public:
 
   void draw(SDL_Renderer *renderer)
   {
+    if (width == 0 || height == 0)
+    {
+      return;
+    }
+
     int yStart = getYPosition();
     int xStart = getXPosition();
     int tileZoom = static_cast<int>(tileSize * zoom);

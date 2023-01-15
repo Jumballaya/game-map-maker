@@ -80,8 +80,6 @@ void Editor::initialize()
 
 void Editor::setup()
 {
-  assetStore->addTexture(renderer, "image", "./assets/f22.png");
-  assetStore->addTexture(renderer, "tilemap", "./assets/tiles_packed.png");
   ImGuiIO &io = ImGui::GetIO();
   io.KeyMap[ImGuiKey_Backspace] = SDL_SCANCODE_BACKSPACE;
   io.KeyMap[ImGuiKey_Space] = SDL_SCANCODE_SPACE;
@@ -95,10 +93,10 @@ void Editor::setup()
   eventBus->subscribe<TileSelectEvent>(this, &Editor::onTileSelect);
   eventBus->subscribe<RunLUAEvent>(this, &Editor::onRunLua);
   eventBus->subscribe<TileToolSelectEvent>(this, &Editor::onTileToolSelect);
-  eventBus->subscribe<TileMapLayerSelectEvent>(this, &Editor::onTileMapLayerSelectEvent);
+  eventBus->subscribe<TileMapLayerSelectEvent>(this, &Editor::onTileMapLayerSelect);
   eventBus->subscribe<TileMapLayerNameChangeEvent>(this, &Editor::onTileMapLayerNameChange);
-
-  loadMap("__init__");
+  eventBus->subscribe<TileSetSelectEvent>(this, &Editor::onTileSetSelect);
+  eventBus->subscribe<OpenTileMapEvent>(this, &Editor::onOpenTileMap);
 
   // Setup mouse
   int mouseX, mouseY;
@@ -254,7 +252,7 @@ void Editor::update()
   SDL_GetMouseState(&mouseX, &mouseY);
   mouse->move(mouseX, mouseY);
 
-  if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect()) && ticks - state.lastClick > 50)
+  if (mouse->isClicked(1) && mouse->isHovering(canvas->getRect()) && ticks - state.lastClick > 15)
   {
     state.lastClick = SDL_GetTicks();
     switch (state.selectedTileTool)
@@ -280,7 +278,6 @@ void Editor::update()
   }
 
   // End Mouse Stuff
-
   state.millisPreviousFrame = ticks;
 }
 
@@ -339,7 +336,7 @@ void Editor::render()
 void Editor::loadMap(std::string filePath)
 {
   // Set Tilemap up
-  tileMap = TileMapLoader::loadTileMap("./assets/tilemaps/jungle.map.xml", assetStore, renderer);
+  tileMap = TileMapLoader::loadTileMap(filePath, assetStore, renderer);
 
   // Set Canvas up
   canvas->setTileSize(tileMap->tileSize);
@@ -405,7 +402,7 @@ void Editor::onTileSelect(TileSelectEvent &event)
   state.selectedTileData.y = event.row;
 };
 
-void Editor::onTileMapLayerSelectEvent(TileMapLayerSelectEvent &event)
+void Editor::onTileMapLayerSelect(TileMapLayerSelectEvent &event)
 {
   state.selectedLayer = event.layerId;
 };
@@ -430,4 +427,15 @@ void Editor::onRunLua(RunLUAEvent &event)
 void Editor::onTileToolSelect(TileToolSelectEvent &event)
 {
   state.selectedTileTool = event.selection;
+}
+
+void Editor::onTileSetSelect(TileSetSelectEvent &event)
+{
+  state.selectedTileset = event.tileset;
+}
+
+void Editor::onOpenTileMap(OpenTileMapEvent &event)
+{
+  Logger::Log("Opening map file: " + event.filepath);
+  loadMap(event.filepath);
 }

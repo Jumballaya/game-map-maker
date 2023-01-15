@@ -33,10 +33,10 @@ public:
       std::unique_ptr<AssetStore> &assetStore,
       std::shared_ptr<TileMap> &tileMaps);
 
-  void renderMainMenuBar(std::unique_ptr<EventBus> &eventBus);
+  void renderMainMenuBar(std::unique_ptr<EventBus> &eventBus, bool *openMapModal);
 
   // Modals
-  void renderOpenMapModal(std::unique_ptr<EventBus> &eventBus);
+  void renderOpenMapModal(std::unique_ptr<EventBus> &eventBus, bool *openMapModal);
 
   // Components
 
