@@ -48,10 +48,10 @@ void Editor::initialize()
   SDL_DisplayMode dm;
   SDL_GetCurrentDisplayMode(0, &dm);
 
-  this->windowWidth = dm.w;
+  this->windowWidth = dm.w - 120;
   this->windowHeight = dm.h;
   state.windowHeight = dm.h;
-  state.windowWidth = dm.w;
+  state.windowWidth = dm.w - 120;
   this->window = SDL_CreateWindow(
       "Tile map editor",
       SDL_WINDOWPOS_CENTERED,
@@ -97,6 +97,8 @@ void Editor::setup()
   eventBus->subscribe<TileMapLayerNameChangeEvent>(this, &Editor::onTileMapLayerNameChange);
   eventBus->subscribe<TileSetSelectEvent>(this, &Editor::onTileSetSelect);
   eventBus->subscribe<OpenTileMapEvent>(this, &Editor::onOpenTileMap);
+  eventBus->subscribe<CreateNewTileMapEvent>(this, &Editor::onCreateNewTileMap);
+  eventBus->subscribe<AddTileSetEvent>(this, &Editor::onAddTileSet);
 
   // Setup mouse
   int mouseX, mouseY;
@@ -284,6 +286,10 @@ void Editor::update()
 void Editor::renderCanvasCursor()
 {
   auto selectedTileset = assetStore->getTileset(state.selectedTileset);
+  if (selectedTileset == NULL)
+  {
+    return;
+  }
   int tileSize = selectedTileset->tileSize;
   if (state.selectedTileTool == TileTool::EraseTile)
   {
@@ -344,9 +350,18 @@ void Editor::loadMap(std::string filePath)
   canvas->setHeight(tileMap->height);
   canvas->setPosition((windowWidth / 2) - (windowWidth / 10), windowHeight / 2);
 
-  state.selectedTileset = tileMap->tilesets[0];
-  state.selectedTileData.x = 0;
-  state.selectedTileData.y = 0;
+  if (tileMap->tilesets.size() > 0)
+  {
+    state.selectedTileset = tileMap->tilesets[0];
+    state.selectedTileData.x = 0;
+    state.selectedTileData.y = 0;
+  }
+  else
+  {
+    state.selectedTileset = "";
+    state.selectedTileData.x = -1;
+    state.selectedTileData.y = -1;
+  }
 }
 
 void Editor::placeTile()
@@ -438,4 +453,42 @@ void Editor::onOpenTileMap(OpenTileMapEvent &event)
 {
   Logger::Log("Opening map file: " + event.filepath);
   loadMap(event.filepath);
+}
+
+void Editor::onCreateNewTileMap(CreateNewTileMapEvent &event)
+{
+  tileMap = std::make_shared<TileMap>(event.sizeInTiles, event.tileSize, mouse->getZoom());
+  canvas->setTileSize(tileMap->tileSize);
+  canvas->setWidth(tileMap->width);
+  canvas->setHeight(tileMap->height);
+
+  if (tileMap->tilesets.size() > 0)
+  {
+    state.selectedTileset = tileMap->tilesets[0];
+    state.selectedTileData.x = 0;
+    state.selectedTileData.y = 0;
+  }
+  else
+  {
+    state.selectedTileset = "";
+    state.selectedTileData.x = -1;
+    state.selectedTileData.y = -1;
+  }
+}
+
+void Editor::onAddTileSet(AddTileSetEvent &event)
+{
+  SDL_Surface *surface = IMG_Load(event.filePath.c_str());
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+  SDL_FreeSurface(surface);
+  glm::vec2 sizeInPixels = {event.sizeInTiles.x * event.tileSize, event.sizeInTiles.y * event.tileSize};
+  assetStore->addTileset(event.assetId, texture, event.sizeInTiles, sizeInPixels, event.tileSize);
+  tileMap->tilesets.push_back(event.assetId);
+  state.selectedTileset = event.assetId;
+  state.selectedTileData = glm::vec2(0, 0);
+
+  if (tileMap->layerCount() == 0)
+  {
+    tileMap->createLayer("layer1", event.assetId);
+  }
 }

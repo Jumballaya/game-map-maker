@@ -55,7 +55,10 @@ std::vector<std::string> AssetStore::getTilesetNames()
   std::vector<std::string> keys;
   for (std::map<std::string, TileSet *>::iterator it = tilesets.begin(); it != tilesets.end(); ++it)
   {
-    keys.push_back(it->first);
+    if (it->first.length() > 0)
+    {
+      keys.push_back(it->first);
+    }
   }
 
   return keys;

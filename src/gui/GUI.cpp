@@ -2,7 +2,7 @@
 #include "../events/Events.h"
 
 void EditorGUI::render(
-    EditorState state,
+    EditorState editorState,
     std::unique_ptr<Mouse> &mouse,
     std::unique_ptr<EventBus> &eventBus,
     std::unique_ptr<AssetStore> &assetStore,
@@ -13,20 +13,35 @@ void EditorGUI::render(
   ///////////////////////
   //  MAIN MENU BAR
   /////////////////////
-  static bool openMapModal = false; // check against EditorState
-  renderMainMenuBar(eventBus, &openMapModal);
+  renderMainMenuBar(eventBus);
 
   //////////////
   //  SIDEBAR
   ///////////////////
-  renderSidebar(state, mouse, eventBus, assetStore, tileMap);
+  renderSidebar(editorState, mouse, eventBus, assetStore, tileMap);
 
   ///////////////
   //  OPEN FILE DIALOG
   //////////////
-  if (openMapModal)
+  if (state.modal_map_open)
   {
-    renderOpenMapModal(eventBus, &openMapModal);
+    renderOpenMapModal(eventBus);
+  }
+
+  ////////////////
+  //  NEW FILE DIALOG
+  ////////////////
+  if (state.modal_map_new)
+  {
+    renderNewMapModal(eventBus);
+  }
+
+  ////////////////
+  //  ADD TILESET DIALOG
+  //////////////////
+  if (state.modal_tileset_add)
+  {
+    renderAddTilesetModal(eventBus);
   }
 
   //////////////////
@@ -37,9 +52,9 @@ void EditorGUI::render(
   ImGui::SetNextWindowPos(ImVec2(0, main_viewport->Size.y - 90));
   ImGui::SetNextWindowSize(ImVec2(main_viewport->Size.x, 90));
   ImGui::Begin("Bottom Status Bar", NULL, winFlags);
-  if (state.hoveringCanvas)
+  if (editorState.hoveringCanvas)
   {
-    ImGui::Text("Mouse Position - [%d, %d]", static_cast<int>(state.hoveringCoords.x), static_cast<int>(state.hoveringCoords.y));
+    ImGui::Text("Mouse Position - [%d, %d]", static_cast<int>(editorState.hoveringCoords.x), static_cast<int>(editorState.hoveringCoords.y));
     ImGui::SameLine();
     ImGui::Spacing();
   }
@@ -53,13 +68,13 @@ void EditorGUI::render(
 }
 
 void EditorGUI::renderSidebar(
-    EditorState state,
+    EditorState editorState,
     std::unique_ptr<Mouse> &mouse,
     std::unique_ptr<EventBus> &eventBus,
     std::unique_ptr<AssetStore> &assetStore,
     std::shared_ptr<TileMap> &tileMap)
 {
-  auto tileset = assetStore->getTileset(state.selectedTileset);
+  auto tileset = assetStore->getTileset(editorState.selectedTileset);
   if (tileset == NULL)
   {
     return;
@@ -73,8 +88,8 @@ void EditorGUI::renderSidebar(
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration;
   const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
   int sideBarWidth = main_viewport->Size.x * .2;
-  ImGui::SetNextWindowSize(ImVec2(sideBarWidth, state.windowHeight - 20), 0);
-  ImGui::SetNextWindowPos(ImVec2(state.windowWidth - sideBarWidth, 20));
+  ImGui::SetNextWindowSize(ImVec2(sideBarWidth, editorState.windowHeight - 20), 0);
+  ImGui::SetNextWindowPos(ImVec2(editorState.windowWidth - sideBarWidth, 20));
   ImGui::Begin("Tiles and Textures", NULL, windowFlags);
 
   // START TILE PICKER
@@ -122,19 +137,19 @@ void EditorGUI::renderSidebar(
   ImGui::Text("Currently Selected Tile", 22);
   double smallTileSizeX = 1.0 / static_cast<double>(cols);
   double smallTileSizeY = 1.0 / static_cast<double>(rows);
-  double smallX = smallTileSizeX * static_cast<double>(state.selectedTileData.x);
-  double smallY = smallTileSizeY * static_cast<double>(state.selectedTileData.y);
+  double smallX = smallTileSizeX * static_cast<double>(editorState.selectedTileData.x);
+  double smallY = smallTileSizeY * static_cast<double>(editorState.selectedTileData.y);
 
   ImGui::Image(texture, ImVec2(tileset->tileSize * 2, tileset->tileSize * 2), ImVec2(smallX, smallY), ImVec2(smallX + smallTileSizeX, smallY + smallTileSizeY));
   // END CURRENT TILE
 
   // START TILESET PICKER
   auto tilesetList = assetStore->getTilesetNames();
-  if (ImGui::BeginCombo("Tilesets", state.selectedTileset.c_str()))
+  if (ImGui::BeginCombo("Tilesets", editorState.selectedTileset.c_str()))
   {
     for (size_t n = 0; n < tilesetList.size(); n++)
     {
-      const bool isSelected = tilesetList[n].compare(state.selectedTileset) == 0;
+      const bool isSelected = tilesetList[n].compare(editorState.selectedTileset) == 0;
       if (ImGui::Selectable(tilesetList[n].c_str(), isSelected))
       {
         eventBus->emit<TileSetSelectEvent>(tilesetList[n]);
@@ -164,7 +179,7 @@ void EditorGUI::renderSidebar(
       for (size_t col = 0; col < 1; col++)
       {
         ImGui::TableSetColumnIndex(col);
-        if (ImGui::Selectable(item.c_str(), row == state.selectedLayer))
+        if (ImGui::Selectable(item.c_str(), row == editorState.selectedLayer))
         {
           eventBus->emit<TileMapLayerSelectEvent>(row);
         };
@@ -221,7 +236,7 @@ void EditorGUI::renderSidebar(
 
   if (ImGui::Button("Create Layer"))
   {
-    tileMap->createLayer(std::string(layerName), state.selectedTileset);
+    tileMap->createLayer(std::string(layerName), editorState.selectedTileset);
   }
 
   // End Add Layer
@@ -249,7 +264,7 @@ void EditorGUI::renderScriptBox(std::unique_ptr<EventBus> &eventBus)
   ImGui::EndChild();
 }
 
-void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus, bool *openMapModal)
+void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus)
 {
   if (ImGui::BeginMainMenuBar())
   {
@@ -257,13 +272,28 @@ void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus, bool *ope
     {
       if (ImGui::MenuItem("Open Map"))
       {
-        *openMapModal = true;
+        state.modal_map_open = true;
+        state.modal_map_new = false;
+        state.modal_map_save = false;
+        state.modal_tileset_add = false;
       }
       if (ImGui::MenuItem("Save Map"))
       {
       }
       if (ImGui::MenuItem("New Map"))
       {
+        state.modal_map_open = false;
+        state.modal_map_new = true;
+        state.modal_map_save = false;
+        state.modal_tileset_add = false;
+      }
+      ImGui::Separator();
+      if (ImGui::MenuItem("Add Tileset"))
+      {
+        state.modal_map_new = false;
+        state.modal_map_open = false;
+        state.modal_map_save = false;
+        state.modal_tileset_add = true;
       }
       ImGui::EndMenu();
     }
@@ -291,13 +321,13 @@ void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus, bool *ope
   }
 }
 
-void EditorGUI::renderOpenMapModal(std::unique_ptr<EventBus> &eventBus, bool *openMapModal)
+void EditorGUI::renderOpenMapModal(std::unique_ptr<EventBus> &eventBus)
 {
   ImGui::OpenPopup("Open Map File");
   ImVec2 center = ImGui::GetMainViewport()->GetCenter();
   ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-  if (ImGui::BeginPopupModal("Open Map File", openMapModal, ImGuiWindowFlags_AlwaysAutoResize))
+  if (ImGui::BeginPopupModal("Open Map File", &state.modal_map_open, ImGuiWindowFlags_AlwaysAutoResize))
   {
     ImGui::Text("Type in the map file's location below\nThen hit the button marked 'open' to start editing");
     ImGui::Separator();
@@ -309,12 +339,99 @@ void EditorGUI::renderOpenMapModal(std::unique_ptr<EventBus> &eventBus, bool *op
     if (ImGui::Button("Open", ImVec2(120, 0)))
     {
       eventBus->emit<OpenTileMapEvent>(std::string(buf));
+      state.modal_map_open = false;
       ImGui::CloseCurrentPopup();
     }
     ImGui::SetItemDefaultFocus();
     ImGui::SameLine();
     if (ImGui::Button("Cancel", ImVec2(120, 0)))
     {
+      state.modal_map_open = false;
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::EndPopup();
+  }
+}
+
+void EditorGUI::renderNewMapModal(std::unique_ptr<EventBus> &eventBus)
+{
+  ImGui::OpenPopup("Create New Map File");
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+  if (ImGui::BeginPopupModal("Create New Map File", &state.modal_map_new, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+    ImGui::Text("Type in the map file's location below\nThen hit the button marked 'open' to start editing");
+    ImGui::Separator();
+
+    static char nameBuff[128];
+    ImGui::InputText("Map Name", nameBuff, IM_ARRAYSIZE(nameBuff));
+
+    static int tileSize;
+    ImGui::InputInt("Tile Size", &tileSize, sizeof(int));
+
+    static int widthInTiles;
+    ImGui::InputInt("Width in tiles", &widthInTiles, sizeof(int));
+
+    static int heightInTiles;
+    ImGui::InputInt("Height in tiles", &heightInTiles, sizeof(int));
+
+    ImGui::Separator();
+    if (ImGui::Button("Create", ImVec2(120, 0)))
+    {
+      eventBus->emit<CreateNewTileMapEvent>(glm::vec2(widthInTiles, heightInTiles), tileSize);
+      state.modal_map_new = false;
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SetItemDefaultFocus();
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(120, 0)))
+    {
+      state.modal_map_new = false;
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::EndPopup();
+  }
+}
+
+void EditorGUI::renderAddTilesetModal(std::unique_ptr<EventBus> &eventBus)
+{
+  ImGui::OpenPopup("Add Tileset");
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+  if (ImGui::BeginPopupModal("Add Tileset", &state.modal_tileset_add, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+    ImGui::Text("Type in the tileset's image location below");
+    ImGui::Separator();
+
+    static char filePath[256];
+    ImGui::InputText("Filepath", filePath, IM_ARRAYSIZE(filePath));
+
+    static char assetId[256];
+    ImGui::InputText("Name", assetId, IM_ARRAYSIZE(assetId));
+
+    static int tileSize;
+    ImGui::InputInt("Tile Size", &tileSize, sizeof(int));
+
+    static int widthInTiles;
+    ImGui::InputInt("Width in tiles", &widthInTiles, sizeof(int));
+
+    static int heightInTiles;
+    ImGui::InputInt("Height in tiles", &heightInTiles, sizeof(int));
+
+    ImGui::Separator();
+    if (ImGui::Button("Open", ImVec2(120, 0)))
+    {
+      eventBus->emit<AddTileSetEvent>(std::string(assetId), std::string(filePath), glm::vec2(widthInTiles, heightInTiles), tileSize);
+      state.modal_tileset_add = false;
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SetItemDefaultFocus();
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(120, 0)))
+    {
+      state.modal_tileset_add = false;
       ImGui::CloseCurrentPopup();
     }
     ImGui::EndPopup();

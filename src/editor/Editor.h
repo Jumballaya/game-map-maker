@@ -55,6 +55,8 @@ public:
   void onTileMapLayerNameChange(TileMapLayerNameChangeEvent &event);
   void onTileSetSelect(TileSetSelectEvent &event);
   void onOpenTileMap(OpenTileMapEvent &event);
+  void onCreateNewTileMap(CreateNewTileMapEvent &event);
+  void onAddTileSet(AddTileSetEvent &event);
 
   // Editor
   static int windowWidth;
