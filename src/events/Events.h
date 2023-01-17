@@ -9,6 +9,7 @@
 #include "./TileMapLayerNameChangeEvent.h"
 #include "./TileSetSelectEvent.h"
 #include "./OpenTileMapEvent.h"
+#include "./SaveTileMapEvent.h"
 #include "./CreateNewTileMapEvent.h"
 #include "./AddTileSetEvent.h"
 

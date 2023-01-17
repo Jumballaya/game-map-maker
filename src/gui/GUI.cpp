@@ -44,6 +44,14 @@ void EditorGUI::render(
     renderAddTilesetModal(eventBus);
   }
 
+  ////////////////
+  //  SAVE TILEMAP
+  //////////////////
+  if (state.modal_map_save)
+  {
+    renderSaveMapModal(eventBus);
+  }
+
   //////////////////
   /// Bottom Status Bar
   ///////////////////
@@ -279,6 +287,10 @@ void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus)
       }
       if (ImGui::MenuItem("Save Map"))
       {
+        state.modal_map_open = false;
+        state.modal_map_new = false;
+        state.modal_map_save = true;
+        state.modal_tileset_add = false;
       }
       if (ImGui::MenuItem("New Map"))
       {
@@ -361,7 +373,7 @@ void EditorGUI::renderNewMapModal(std::unique_ptr<EventBus> &eventBus)
 
   if (ImGui::BeginPopupModal("Create New Map File", &state.modal_map_new, ImGuiWindowFlags_AlwaysAutoResize))
   {
-    ImGui::Text("Type in the map file's location below\nThen hit the button marked 'open' to start editing");
+    ImGui::Text("Type in the map's information below\nThen hit the button marked 'create' to start editing");
     ImGui::Separator();
 
     static char nameBuff[128];
@@ -437,3 +449,35 @@ void EditorGUI::renderAddTilesetModal(std::unique_ptr<EventBus> &eventBus)
     ImGui::EndPopup();
   }
 }
+
+void EditorGUI::renderSaveMapModal(std::unique_ptr<EventBus> &eventBus)
+{
+  ImGui::OpenPopup("Save Map File");
+  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+  if (ImGui::BeginPopupModal("Save Map File", &state.modal_map_save, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+    ImGui::Text("Type in the location you want to save your map\nThen hit the button marked 'save' to saved your tilemap");
+    ImGui::Separator();
+
+    static char buf[256];
+    ImGui::InputText("Filepath", buf, IM_ARRAYSIZE(buf));
+
+    ImGui::Separator();
+    if (ImGui::Button("Save", ImVec2(120, 0)))
+    {
+      eventBus->emit<SaveTileMapEvent>(std::string(buf));
+      state.modal_map_save = false;
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::SetItemDefaultFocus();
+    ImGui::SameLine();
+    if (ImGui::Button("Cancel", ImVec2(120, 0)))
+    {
+      state.modal_map_save = false;
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::EndPopup();
+  }
+};

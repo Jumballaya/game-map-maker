@@ -99,6 +99,7 @@ void Editor::setup()
   eventBus->subscribe<OpenTileMapEvent>(this, &Editor::onOpenTileMap);
   eventBus->subscribe<CreateNewTileMapEvent>(this, &Editor::onCreateNewTileMap);
   eventBus->subscribe<AddTileSetEvent>(this, &Editor::onAddTileSet);
+  eventBus->subscribe<SaveTileMapEvent>(this, &Editor::onSaveTileMap);
 
   // Setup mouse
   int mouseX, mouseY;
@@ -451,7 +452,7 @@ void Editor::onTileSetSelect(TileSetSelectEvent &event)
 
 void Editor::onOpenTileMap(OpenTileMapEvent &event)
 {
-  Logger::Log("Opening map file: " + event.filepath);
+  Logger::Log("[Editor] Opening map file: " + event.filepath);
   loadMap(event.filepath);
 }
 
@@ -492,3 +493,9 @@ void Editor::onAddTileSet(AddTileSetEvent &event)
     tileMap->createLayer("layer1", event.assetId);
   }
 }
+
+void Editor::onSaveTileMap(SaveTileMapEvent &event)
+{
+  Logger::Log("[Editor] Saving tilemap to " + event.filepath);
+  TileMapLoader::saveTileMap(event.filepath, tileMap);
+};

@@ -110,6 +110,12 @@ public:
 
         return tileMap;
     }
+
+    static void saveTileMap(const std::string &filePath, std::shared_ptr<TileMap>)
+    {
+        // Convert tilemap into XML
+        // Save XML file
+    }
 };
 
 #endif

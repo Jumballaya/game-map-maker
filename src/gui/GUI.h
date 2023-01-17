@@ -55,6 +55,7 @@ public:
   // Modals
   void renderOpenMapModal(std::unique_ptr<EventBus> &eventBus);
   void renderNewMapModal(std::unique_ptr<EventBus> &eventBus);
+  void renderSaveMapModal(std::unique_ptr<EventBus> &eventBus);
   void renderAddTilesetModal(std::unique_ptr<EventBus> &eventBus);
 
   // Components
