@@ -27,7 +27,7 @@ public:
 
   // TileSets
   // void addTileset(const std::string &assetId, const std::string &filePath); // Set this up when we XML loading working
-  void addTileset(const std::string &assetId, SDL_Texture *texture, glm::vec2 sizeTile, glm::vec2 sizePixel, int tileSize);
+  void addTileset(SDL_Renderer *renderer, const std::string &assetId, const std::string &filePath, glm::vec2 sizeTile, glm::vec2 sizePixel, int tileSize);
   TileSet *getTileset(const std::string &assetId);
   std::vector<std::string> getTilesetNames();
 

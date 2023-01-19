@@ -352,3 +352,12 @@ void TileMap::swapLayers(size_t layer1, size_t layer2)
   layers[layer2] = temp1;
   layers[layer1] = temp2;
 };
+
+TileMapLayer *TileMap::getLayer(size_t layerId)
+{
+  if (layerId < 0 || layerId > layers.size() - 1)
+  {
+    return nullptr;
+  }
+  return layers[layerId];
+};

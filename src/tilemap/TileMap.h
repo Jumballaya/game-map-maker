@@ -125,6 +125,7 @@ public:
   void deleteLayer(size_t layerId);
   void moveLayer(size_t layerId, size_t layerIdToSwapWith);
   void swapLayers(size_t layer1, size_t layer2);
+  TileMapLayer *getLayer(size_t layerId);
   const std::string &getLayerName(size_t layerId) const;
 
   size_t layerCount() { return layers.size(); }

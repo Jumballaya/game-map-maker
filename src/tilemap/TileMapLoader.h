@@ -51,11 +51,7 @@ public:
             int width = tileset.attribute("width").as_int();
             int height = tileset.attribute("height").as_int();
 
-            SDL_Surface *surface = IMG_Load(source.c_str());
-            SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-            SDL_FreeSurface(surface);
-
-            assetStore->addTileset(name, texture, glm::vec2(cols, rows), glm::vec2(width, height), tileSize);
+            assetStore->addTileset(renderer, name, source, glm::vec2(cols, rows), glm::vec2(width, height), tileSize);
             tileMap->tilesets.push_back(name);
         }
 
@@ -111,10 +107,54 @@ public:
         return tileMap;
     }
 
-    static void saveTileMap(const std::string &filePath, std::shared_ptr<TileMap>)
+    static void saveTileMap(const std::string &filePath, std::shared_ptr<TileMap> &tileMap, std::unique_ptr<AssetStore> &assetStore)
     {
         // Convert tilemap into XML
+        pugi::xml_document doc;
+        auto map = doc.append_child("map");
+        map.append_attribute("width") = tileMap->cols;
+        map.append_attribute("height") = tileMap->rows;
+        map.append_attribute("tileSize") = tileMap->tileSize;
+
+        auto tilesets = map.append_child("tilesets");
+        for (auto ts : tileMap->tilesets)
+        {
+            auto tset = assetStore->getTileset(ts);
+            if (!tset)
+            {
+                continue;
+            }
+            auto tileset = tilesets.append_child("tileset");
+            tileset.append_attribute("name") = ts.c_str();
+            tileset.append_attribute("source") = tset->filePath.c_str();
+            tileset.append_attribute("tileSize") = tset->tileSize;
+            tileset.append_attribute("columns") = tset->sizeTile.x;
+            tileset.append_attribute("rows") = tset->sizeTile.y;
+            tileset.append_attribute("width") = tset->sizePixel.x;
+            tileset.append_attribute("height") = tset->sizePixel.y;
+        }
+
+        auto layers = map.append_child("layers");
+        for (int i = 0; i < tileMap->layerCount(); i++)
+        {
+            auto layer = layers.append_child("layer");
+            auto tmapLayer = tileMap->getLayer(i);
+            if (tmapLayer == nullptr)
+            {
+                continue;
+            }
+            layer.append_attribute("name") = tmapLayer->name.c_str();
+            layer.append_attribute("width") = tmapLayer->cols;
+            layer.append_attribute("height") = tmapLayer->rows;
+            layer.append_attribute("tileset") = tmapLayer->tileset.c_str();
+
+            auto tiledata = layer.append_child("tiledata");
+            tiledata.append_child(pugi::node_pcdata).set_value("Sample 123");
+        }
+
         // Save XML file
+        auto saveResult = doc.save_file(filePath.c_str());
+        Logger::Log("[TileMapLoader] Saved file " + filePath + ". Results: " + (saveResult ? "success" : "failure"));
     }
 };
 

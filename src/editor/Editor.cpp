@@ -479,11 +479,8 @@ void Editor::onCreateNewTileMap(CreateNewTileMapEvent &event)
 
 void Editor::onAddTileSet(AddTileSetEvent &event)
 {
-  SDL_Surface *surface = IMG_Load(event.filePath.c_str());
-  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-  SDL_FreeSurface(surface);
   glm::vec2 sizeInPixels = {event.sizeInTiles.x * event.tileSize, event.sizeInTiles.y * event.tileSize};
-  assetStore->addTileset(event.assetId, texture, event.sizeInTiles, sizeInPixels, event.tileSize);
+  assetStore->addTileset(renderer, event.assetId, event.filePath, event.sizeInTiles, sizeInPixels, event.tileSize);
   tileMap->tilesets.push_back(event.assetId);
   state.selectedTileset = event.assetId;
   state.selectedTileData = glm::vec2(0, 0);
@@ -497,5 +494,5 @@ void Editor::onAddTileSet(AddTileSetEvent &event)
 void Editor::onSaveTileMap(SaveTileMapEvent &event)
 {
   Logger::Log("[Editor] Saving tilemap to " + event.filepath);
-  TileMapLoader::saveTileMap(event.filepath, tileMap);
+  TileMapLoader::saveTileMap(event.filepath, tileMap, assetStore);
 };

@@ -68,13 +68,6 @@ private:
   SDL_Renderer *renderer;
   EditorState state;
 
-  // MapCanvas class
-  // Map data struct to be populated with map data
-  // map tile data ---> tileSize, mapCols mapRows, mapWidth (px) mapHeight (px)
-  // Need a draw method
-  // Draws background, then mapdata
-  // Multiple layers
-
   std::shared_ptr<TileMap> tileMap;
   std::unique_ptr<AssetStore> assetStore;
   std::unique_ptr<EventBus> eventBus;
