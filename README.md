@@ -60,12 +60,12 @@ Progress pic to mark this day
   - ~~Document the file format~~
   - ~~Save TileMap into an XML file~~
 
-- Add Dialog boxes (Open, New, Save)
+- ~~Add Dialog boxes (Open, New, Save)~~
   - ~~Add Open TileMap~~ 
   - ~~Add create new with settings~~
     - ~~Blank TileMap initialization~~
     - ~~UI Dialog box~~
-  - Add Save dialog box
+  - ~~Add Save dialog box~~
 
 - Add more ways to interact with the layers
   - Layer visible/hidden

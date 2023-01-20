@@ -244,7 +244,11 @@ void EditorGUI::renderSidebar(
 
   if (ImGui::Button("Create Layer"))
   {
-    tileMap->createLayer(std::string(layerName), editorState.selectedTileset);
+    auto tileset = assetStore->getTileset(editorState.selectedTileset);
+    if (tileset)
+    {
+      tileMap->createLayer(std::string(layerName), editorState.selectedTileset, tileset->sizeTile.x);
+    }
   }
 
   // End Add Layer

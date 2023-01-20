@@ -64,7 +64,12 @@ public:
             std::string tilesetName = layer.attribute("tileset").as_string();
             int width = layer.attribute("width").as_int();
             int height = layer.attribute("height").as_int();
-            size_t layerId = tileMap.get()->createLayer(name, tilesetName);
+            auto tileset = assetStore->getTileset(tilesetName);
+            if (!tileset)
+            {
+                continue;
+            }
+            size_t layerId = tileMap.get()->createLayer(name, tilesetName, tileset->sizeTile.x);
             auto dataNode = layer.child("tiledata");
             std::string tiledata = dataNode.child_value();
             auto tileSet = assetStore->getTileset(tilesetName);
@@ -135,7 +140,7 @@ public:
         }
 
         auto layers = map.append_child("layers");
-        for (int i = 0; i < tileMap->layerCount(); i++)
+        for (size_t i = 0; i < tileMap->layerCount(); i++)
         {
             auto layer = layers.append_child("layer");
             auto tmapLayer = tileMap->getLayer(i);
@@ -149,7 +154,9 @@ public:
             layer.append_attribute("tileset") = tmapLayer->tileset.c_str();
 
             auto tiledata = layer.append_child("tiledata");
-            tiledata.append_child(pugi::node_pcdata).set_value("Sample 123");
+            std::stringstream temp;
+            temp << (*tmapLayer);
+            tiledata.append_child(pugi::node_pcdata).set_value(temp.str().c_str());
         }
 
         // Save XML file

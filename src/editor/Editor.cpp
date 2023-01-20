@@ -487,7 +487,7 @@ void Editor::onAddTileSet(AddTileSetEvent &event)
 
   if (tileMap->layerCount() == 0)
   {
-    tileMap->createLayer("layer1", event.assetId);
+    tileMap->createLayer("layer1", event.assetId, event.sizeInTiles.x);
   }
 }
 

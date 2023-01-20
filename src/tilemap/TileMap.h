@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 #include <SDL2/SDL.h>
 #include "../../libs/glm/glm.hpp"
@@ -37,10 +38,10 @@ public:
   int srcRow;
   int index;
 
-  friend std::ostream &operator<<(std::ostream &os, const Tile &t)
+  friend std::stringstream &operator<<(std::stringstream &ss, const Tile &t)
   {
-    os << t.index;
-    return os;
+    ss << std::to_string(t.index);
+    return ss;
   }
 };
 
@@ -61,7 +62,7 @@ src/./editor/../gui/../editor/EditorState.h: In constructor ‘Editorll
 class TileMapLayer
 {
 public:
-  TileMapLayer(std::string name, std::string tileset, int cols, int rows, int tileSize);
+  TileMapLayer(std::string name, std::string tileset, int cols, int rows, int tileSize, int tilesetCols);
   ~TileMapLayer();
 
   void render(SDL_Renderer *renderer, SDL_Texture *texture, int xStart, int yStart, double zoom);
@@ -75,9 +76,27 @@ public:
 
   std::string name;    // Name of the layer (for user)
   std::string tileset; // Name of the tileset (assetId)
+  int tilesetCols;     // Number of columns in the tileset
   int rows;            // Number of rows
   int cols;            // Number of columns
   int tileSize;        // Size of a side of a tile
+
+  friend std::stringstream &operator<<(std::stringstream &ss, const TileMapLayer &t)
+  {
+    for (int y = 0; y < t.rows; y++)
+    {
+      for (int x = 0; x < t.cols; x++)
+      {
+        ss << t.getTile(glm::vec2(x, y));
+        if (!(x == (t.cols - 1) && y == (t.rows - 1)))
+        {
+          ss << ",";
+        }
+      }
+      ss << "\n";
+    }
+    return ss;
+  }
 
 private:
   std::vector<std::vector<Tile *>> tiles;
@@ -120,7 +139,7 @@ public:
   void updateTile(size_t layer, glm::vec2 position, glm::vec2 tileData);
   void floodFill(size_t layer, glm::vec2 position, glm::vec2 tileData);
 
-  size_t createLayer(const std::string &name, const std::string &tileset);
+  size_t createLayer(const std::string &name, const std::string &tileset, int tilesetCols);
   void renameLayer(size_t layerId, const std::string &name);
   void deleteLayer(size_t layerId);
   void moveLayer(size_t layerId, size_t layerIdToSwapWith);

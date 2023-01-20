@@ -6,7 +6,11 @@
 
 int create_index(int x, int y, int cols)
 {
-  return (y * cols) + x;
+  if (x == -1 && y == -1)
+  {
+    return 0;
+  }
+  return (y * cols) + x + 1;
 }
 
 /****
@@ -15,10 +19,11 @@ int create_index(int x, int y, int cols)
  *
  */
 
-TileMapLayer::TileMapLayer(std::string name, std::string tileset, int cols, int rows, int tileSize)
+TileMapLayer::TileMapLayer(std::string name, std::string tileset, int cols, int rows, int tileSize, int tilesetCols)
 {
   this->name = name;
   this->tileset = tileset;
+  this->tilesetCols = tilesetCols;
   initialize(cols, rows, tileSize);
 }
 
@@ -63,11 +68,7 @@ void TileMapLayer::updateTile(glm::vec2 position, glm::vec2 tileData)
   int row = position.y;
   int srcCol = tileData.x;
   int srcRow = tileData.y;
-  int index = create_index(tileData.x, tileData.y, cols);
-  if (srcCol == -1 && srcRow == -1)
-  {
-    index = -1;
-  }
+  int index = create_index(tileData.x, tileData.y, tilesetCols);
 
   if (inBounds(position))
   {
@@ -266,9 +267,9 @@ void TileMap::setZoom(double zoom)
   this->zoom = zoom;
 }
 
-size_t TileMap::createLayer(const std::string &name, const std::string &tileset)
+size_t TileMap::createLayer(const std::string &name, const std::string &tileset, int tilesetCols)
 {
-  TileMapLayer *layer = new TileMapLayer(name, tileset, cols, rows, tileSize);
+  TileMapLayer *layer = new TileMapLayer(name, tileset, cols, rows, tileSize, tilesetCols);
   layers.push_back(layer);
   return layers.size() - 1;
 };
