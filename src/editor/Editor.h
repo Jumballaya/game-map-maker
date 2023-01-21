@@ -28,7 +28,7 @@ public:
   ~Editor();
 
   // Start/Close
-  void initialize();
+  void initialize(const std::string &rootPath);
   void destroy();
 
   // Editor Loop
@@ -77,6 +77,8 @@ private:
   std::unique_ptr<CommandManager> commandManager;
 
   sol::state lua;
+
+  std::string rootPath;
 };
 
 #endif

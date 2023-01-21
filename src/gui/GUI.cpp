@@ -342,34 +342,8 @@ void EditorGUI::renderMainMenuBar(std::unique_ptr<EventBus> &eventBus)
 
 void EditorGUI::renderOpenMapModal(std::unique_ptr<EventBus> &eventBus)
 {
-  ImGui::OpenPopup("Open Map File");
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-  if (ImGui::BeginPopupModal("Open Map File", &state.modal_map_open, ImGuiWindowFlags_AlwaysAutoResize))
-  {
-    ImGui::Text("Type in the map file's location below\nThen hit the button marked 'open' to start editing");
-    ImGui::Separator();
-
-    static char buf[256];
-    ImGui::InputText("Filepath", buf, IM_ARRAYSIZE(buf));
-
-    ImGui::Separator();
-    if (ImGui::Button("Open", ImVec2(120, 0)))
-    {
-      eventBus->emit<OpenTileMapEvent>(std::string(buf));
-      state.modal_map_open = false;
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::SetItemDefaultFocus();
-    ImGui::SameLine();
-    if (ImGui::Button("Cancel", ImVec2(120, 0)))
-    {
-      state.modal_map_open = false;
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::EndPopup();
-  }
+  eventBus->emit<OpenTileMapEvent>();
+  state.modal_map_open = false;
 }
 
 void EditorGUI::renderNewMapModal(std::unique_ptr<EventBus> &eventBus)

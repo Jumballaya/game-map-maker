@@ -14,7 +14,7 @@
 int main(int argc, char *argv[])
 {
     Editor editor;
-    editor.initialize();
+    editor.initialize(std::string(argv[0]));
     editor.run();
     editor.destroy();
     return 0;

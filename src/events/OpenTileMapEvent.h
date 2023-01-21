@@ -8,8 +8,7 @@
 struct OpenTileMapEvent : public Event
 {
 public:
-    std::string filepath;
-    OpenTileMapEvent(std::string filepath) : filepath(filepath) {}
+    OpenTileMapEvent() {}
 };
 
 #endif

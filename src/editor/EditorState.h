@@ -31,6 +31,8 @@ public:
   bool hoveringCanvas;
   glm::vec2 hoveringCoords;
 
+  bool dialogOpen = false;
+
   Uint32 lastClick = 0; // For mouse click debounce
 
   EditorState()

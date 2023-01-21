@@ -4,6 +4,7 @@
 #include "../../libs/imgui/imgui.h"
 #include "../../libs/imgui/imgui_sdl.h"
 #include "../../libs/imgui/imgui_impl_sdl.h"
+#include "../libs/pfd/pfd.h"
 
 #include "Editor.h"
 #include "../logger/Logger.h"
@@ -25,6 +26,8 @@ Editor::Editor()
 
   canvas->setZoom(mouse->getZoom());
   tileMap->setZoom(mouse->getZoom());
+
+  rootPath = "";
 }
 
 Editor::~Editor()
@@ -32,8 +35,9 @@ Editor::~Editor()
   Logger::Log("[Editor] destructor called");
 }
 
-void Editor::initialize()
+void Editor::initialize(const std::string &rootPath)
 {
+  this->rootPath = rootPath;
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
   {
     Logger::Error("Error initializing SDL");
@@ -58,7 +62,7 @@ void Editor::initialize()
       SDL_WINDOWPOS_CENTERED,
       windowWidth,
       windowHeight,
-      SDL_WINDOW_MAXIMIZED);
+      SDL_WINDOW_RESIZABLE);
 
   if (!window)
   {
@@ -242,6 +246,9 @@ void Editor::update()
   ImGuiIO &io = ImGui::GetIO();
   io.DeltaTime = deltaTime;
 
+  if (io.DeltaTime <= 0.0f)
+    io.DeltaTime = 0.00001f;
+
   // Update Mouse Stuff
   canvas->setZoom(mouse->getZoom());
   tileMap->setZoom(mouse->getZoom());
@@ -314,6 +321,10 @@ void Editor::renderCanvasCursor()
 
 void Editor::render()
 {
+  if (state.dialogOpen)
+  {
+    return;
+  }
   SDL_SetRenderDrawColor(renderer, 21, 21, 21, 255);
   SDL_RenderClear(renderer);
 
@@ -452,8 +463,17 @@ void Editor::onTileSetSelect(TileSetSelectEvent &event)
 
 void Editor::onOpenTileMap(OpenTileMapEvent &event)
 {
-  Logger::Log("[Editor] Opening map file: " + event.filepath);
-  loadMap(event.filepath);
+  state.dialogOpen = true;
+  auto f = pfd::open_file("Choose files to read", rootPath,
+                          {"Map File (.map.xml .xml)", "*.xml *.map.xml"});
+  state.dialogOpen = false;
+  auto res = f.result();
+
+  if (res.size() > 0)
+  {
+    Logger::Log("[Editor] Opening map file: " + f.result()[0]);
+    loadMap(f.result()[0]);
+  }
 }
 
 void Editor::onCreateNewTileMap(CreateNewTileMapEvent &event)
