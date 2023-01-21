@@ -80,6 +80,8 @@ public:
   int rows;            // Number of rows
   int cols;            // Number of columns
   int tileSize;        // Size of a side of a tile
+  bool visible;        // Don't render if not visible
+  bool locked;         // Don't updae if locked
 
   friend std::stringstream &operator<<(std::stringstream &ss, const TileMapLayer &t)
   {

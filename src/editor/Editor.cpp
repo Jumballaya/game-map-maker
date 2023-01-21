@@ -387,7 +387,11 @@ void Editor::placeTile()
     Tile t = tileMap->getTile(state.selectedLayer, tileCoords);
     if (!(t.srcRow == state.selectedTileData.y && t.srcCol == state.selectedTileData.x))
     {
-      commandManager->execute<PlaceTileCommand>(tileMap, state.selectedLayer, tileCoords, state.selectedTileData);
+      auto layer = tileMap->getLayer(state.selectedLayer);
+      if (layer->visible && !layer->locked)
+      {
+        commandManager->execute<PlaceTileCommand>(tileMap, state.selectedLayer, tileCoords, state.selectedTileData);
+      }
     }
   }
 }
@@ -400,7 +404,11 @@ void Editor::eraseTile()
     Tile t = tileMap->getTile(state.selectedLayer, tileCoords);
     if (!(t.srcRow == -1 && t.srcCol == -1))
     {
-      commandManager->execute<PlaceTileCommand>(tileMap, state.selectedLayer, tileCoords, glm::vec2(-1, -1));
+      auto layer = tileMap->getLayer(state.selectedLayer);
+      if (layer->visible && !layer->locked)
+      {
+        commandManager->execute<PlaceTileCommand>(tileMap, state.selectedLayer, tileCoords, glm::vec2(-1, -1));
+      }
     }
   }
 }
@@ -410,7 +418,11 @@ void Editor::floodFill()
   glm::vec2 tileCoords = canvas->getTileCoords(mouse->getPosition());
   if (tileCoords.x >= 0 && tileCoords.y >= 0)
   {
-    tileMap->floodFill(state.selectedLayer, tileCoords, state.selectedTileData);
+    auto layer = tileMap->getLayer(state.selectedLayer);
+    if (layer->visible && !layer->locked)
+    {
+      tileMap->floodFill(state.selectedLayer, tileCoords, state.selectedTileData);
+    }
   }
 }
 

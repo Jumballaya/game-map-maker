@@ -232,10 +232,18 @@ void EditorGUI::renderSidebar(
       }
 
       ImGui::TableNextColumn();
-      ImGui::Button("Hide");
+      bool visible = tileMap->getLayer(row)->visible;
+      if (ImGui::Button(visible ? "Hide" : "Show"))
+      {
+        tileMap->getLayer(row)->visible = !visible;
+      }
 
+      bool locked = tileMap->getLayer(row)->locked;
       ImGui::TableNextColumn();
-      ImGui::Button("Lock");
+      if (ImGui::Button(locked ? "Unlock" : "Lock"))
+      {
+        tileMap->getLayer(row)->locked = !locked;
+      }
     }
     ImGui::EndTable();
   }

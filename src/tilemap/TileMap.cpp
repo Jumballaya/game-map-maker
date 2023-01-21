@@ -37,6 +37,8 @@ void TileMapLayer::initialize(int cols, int rows, int tileSize)
   this->cols = cols;
   this->rows = rows;
   this->tileSize = tileSize;
+  locked = false;
+  visible = true;
   for (int y = 0; y < rows; y++)
   {
     std::vector<Tile *> row;
@@ -64,6 +66,8 @@ Tile TileMapLayer::getTile(glm::vec2 position) const
 
 void TileMapLayer::updateTile(glm::vec2 position, glm::vec2 tileData)
 {
+  if (locked || !visible)
+    return;
   int col = position.x;
   int row = position.y;
   int srcCol = tileData.x;
@@ -80,6 +84,8 @@ void TileMapLayer::updateTile(glm::vec2 position, glm::vec2 tileData)
 
 void TileMapLayer::floodFill(glm::vec2 position, glm::vec2 tileData)
 {
+  if (locked || !visible)
+    return;
   int col = position.x;
   int row = position.y;
   if (inBounds(position))
@@ -152,6 +158,8 @@ void TileMapLayer::clear()
 
 void TileMapLayer::render(SDL_Renderer *renderer, SDL_Texture *texture, int xStart, int yStart, double zoom)
 {
+  if (!visible)
+    return;
   int x = 0;
   int y = 0;
   for (auto row : tiles)
