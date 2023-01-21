@@ -176,7 +176,7 @@ void EditorGUI::renderSidebar(
   ImGui::Separator();
   ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Reorderable;
   ImGui::Text("Tile Map Layers", 22);
-  if (ImGui::BeginTable("layers-table", 1, tableFlags))
+  if (ImGui::BeginTable("layers-table", 3, tableFlags))
   {
     ImGui::TableSetupColumn("Layer Name");
     size_t count = tileMap->layerCount();
@@ -184,55 +184,58 @@ void EditorGUI::renderSidebar(
     {
       ImGui::TableNextRow();
       const std::string &item = tileMap->getLayerName(row);
-      for (size_t col = 0; col < 1; col++)
+      ImGui::TableNextColumn();
+      if (ImGui::Selectable(item.c_str(), row == editorState.selectedLayer))
       {
-        ImGui::TableSetColumnIndex(col);
-        if (ImGui::Selectable(item.c_str(), row == editorState.selectedLayer))
+        eventBus->emit<TileMapLayerSelectEvent>(row);
+      };
+      if (ImGui::BeginPopupContextItem())
+      {
+        ImGui::Text("Rename layer \"%s\"", tileMap->getLayerName(row).c_str());
+        ImGui::Separator();
+        static char newName[32];
+        ImGui::InputText("rename layer", newName, IM_ARRAYSIZE(newName));
+        ImGui::Separator();
+        if (ImGui::Button("Rename"))
         {
-          eventBus->emit<TileMapLayerSelectEvent>(row);
-        };
-        if (ImGui::BeginPopupContextItem())
-        {
-          ImGui::Text("Rename layer \"%s\"", tileMap->getLayerName(row).c_str());
-          ImGui::Separator();
-          static char newName[32];
-          ImGui::InputText("rename layer", newName, IM_ARRAYSIZE(newName));
-          ImGui::Separator();
-          if (ImGui::Button("Rename"))
+          eventBus->emit<TileMapLayerNameChangeEvent>(row, std::string(newName));
+          for (int i = 0; i < IM_ARRAYSIZE(newName); i++)
           {
-            eventBus->emit<TileMapLayerNameChangeEvent>(row, std::string(newName));
-            for (int i = 0; i < IM_ARRAYSIZE(newName); i++)
-            {
-              newName[i] = '\0';
-            }
-            ImGui::CloseCurrentPopup();
+            newName[i] = '\0';
           }
-          ImGui::SameLine();
-          if (ImGui::Button("Cancel"))
-          {
-            for (int i = 0; i < IM_ARRAYSIZE(newName); i++)
-            {
-              newName[i] = '\0';
-            }
-            ImGui::CloseCurrentPopup();
-          }
-          ImGui::EndPopup();
+          ImGui::CloseCurrentPopup();
         }
-        if (ImGui::IsItemHovered())
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
         {
-          ImGui::SetTooltip("Right-click to rename layer");
-        }
-        if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
-        {
-          size_t nextRow = row + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
-          if (nextRow >= 0 && nextRow < count)
+          for (int i = 0; i < IM_ARRAYSIZE(newName); i++)
           {
-            eventBus->emit<TileMapLayerSelectEvent>(nextRow);
-            tileMap->swapLayers(nextRow, row);
-            ImGui::ResetMouseDragDelta();
+            newName[i] = '\0';
           }
+          ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+      }
+      if (ImGui::IsItemHovered())
+      {
+        ImGui::SetTooltip("Right-click to rename layer");
+      }
+      if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
+      {
+        size_t nextRow = row + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+        if (nextRow >= 0 && nextRow < count)
+        {
+          eventBus->emit<TileMapLayerSelectEvent>(nextRow);
+          tileMap->swapLayers(nextRow, row);
+          ImGui::ResetMouseDragDelta();
         }
       }
+
+      ImGui::TableNextColumn();
+      ImGui::Button("Hide");
+
+      ImGui::TableNextColumn();
+      ImGui::Button("Lock");
     }
     ImGui::EndTable();
   }
