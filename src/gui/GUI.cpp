@@ -441,32 +441,6 @@ void EditorGUI::renderAddTilesetModal(std::unique_ptr<EventBus> &eventBus)
 
 void EditorGUI::renderSaveMapModal(std::unique_ptr<EventBus> &eventBus)
 {
-  ImGui::OpenPopup("Save Map File");
-  ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-  ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-  if (ImGui::BeginPopupModal("Save Map File", &state.modal_map_save, ImGuiWindowFlags_AlwaysAutoResize))
-  {
-    ImGui::Text("Type in the location you want to save your map\nThen hit the button marked 'save' to saved your tilemap");
-    ImGui::Separator();
-
-    static char buf[256];
-    ImGui::InputText("Filepath", buf, IM_ARRAYSIZE(buf));
-
-    ImGui::Separator();
-    if (ImGui::Button("Save", ImVec2(120, 0)))
-    {
-      eventBus->emit<SaveTileMapEvent>(std::string(buf));
-      state.modal_map_save = false;
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::SetItemDefaultFocus();
-    ImGui::SameLine();
-    if (ImGui::Button("Cancel", ImVec2(120, 0)))
-    {
-      state.modal_map_save = false;
-      ImGui::CloseCurrentPopup();
-    }
-    ImGui::EndPopup();
-  }
+  eventBus->emit<SaveTileMapEvent>();
+  state.modal_map_save = false;
 };

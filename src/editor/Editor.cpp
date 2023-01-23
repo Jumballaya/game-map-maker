@@ -525,6 +525,16 @@ void Editor::onAddTileSet(AddTileSetEvent &event)
 
 void Editor::onSaveTileMap(SaveTileMapEvent &event)
 {
-  Logger::Log("[Editor] Saving tilemap to " + event.filepath);
-  TileMapLoader::saveTileMap(event.filepath, tileMap, assetStore);
+  state.dialogOpen = true;
+  auto f = pfd::save_file("Save Tile Map", rootPath,
+                          {"Map File (.map.xml .xml)", "*.xml *.map.xml"});
+  state.dialogOpen = false;
+
+  auto res = f.result();
+
+  if (!res.empty())
+  {
+    Logger::Log("[Editor] saving map file: " + f.result()[0]);
+    TileMapLoader::saveTileMap(res, tileMap, assetStore);
+  }
 };
