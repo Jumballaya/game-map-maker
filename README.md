@@ -1,6 +1,6 @@
-# Unnamed 2D Game Engine
+# Game Map Maker
 
-This game engine was created with the goal of further learning about game engine development. This is not intended to be used for any real projects.
+This game map maker was created with the goal of further learning about game engine development. This is not intended to be used for any real projects.
 
 
 ## Dependencies
@@ -88,37 +88,4 @@ Progress pic to mark this day
     - Resolution
     - Resizing
     - Sidebar size/position
-
-
-
-
-
-- Start Game Editor
-  - Merge in Game Engine
-    - This will be a big one
-    - The ECS stuff will need to be implemented, but only ran when the game is 'played'
-    - The game needs to be able to be paused completely and also stopped/reset
-    - The Game engine needs to be kinda of split from it's window implementation
-    - So there should really be 3 'projects' -->
-      - The editor -- Tool to create, edit and manage game files. Wraps the engine and runs it inside of the editor. loads up the
-                    engines' assets/entities/etc. from the editor state. then starts it in a small part of the window.
-      - The engine -- The core system that actually runs the game (ecs/game events/scripting/etc.)
-      - The game   -- Creates the SDL stuff, passes it to the engine, loads up the engines' assets/entities/etc. from file then
-                    starts it in the window. It would be nice if this was bundled by the editor with the assets inside the binary
-
-  - Update Game Engine to read/parse map files
-    - Add pugixml and map file format docs to Game Engine
-    - Implement open and parse map file in Game Engine
-
-  - Generate Game lua file
-    - For the game: Basic game lua file pointing to the single 'level' aka the active tilemap
-    - For the level: just the TileMap data for now, empty entities list
-  - UI for Asset manager
-    - Fonts
-    - Images
-  - Multiple Maps can be edited
-    - Tabs in map editor
-    - Saves multiple level files and correctly links to them in the game lua file
-  - UI Entity list view
-    - View all the entities in a level
-  - Render all Entities
+    - Use ImGui 'docking' branch
